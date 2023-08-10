@@ -1,0 +1,32 @@
+{
+	"name": "Kick (Beta)",
+	"description": "A live streaming platform, backed by Stake.com.",
+	"author": "FUTO",
+	"authorUrl": "https://futo.org",
+	
+	"sourceUrl": "https://autoupdate.unkto.com/sources/Kick/KickConfig.json",
+	"repositoryUrl": "https://futo.org",
+	"scriptUrl": "./KickScript.js",
+	"version": 1,
+
+	"iconUrl": "./kick.png",
+	"id": "4a78c2ff-c20f-43ac-8f75-34515df1d320",
+
+	"scriptSignature": "",
+	"scriptPublicKey": "",
+	"packages": ["Http"],
+	
+	"allowEval": false,
+	"allowUrls": [
+		"kick.com"
+	],
+	
+	"authentication": {
+		"userAgent": "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.196 Mobile Safari/537.36",
+		"loginUrl": "https://kick.com/",
+		"headersToFind": ["Authorization"],
+		"cookiesToFind": ["kick_session", "XSRF-TOKEN"],
+		"completionUrl": "https://kick.com/broadcasting/auth",
+		"loginButton": "#login-button"
+	}
+}
