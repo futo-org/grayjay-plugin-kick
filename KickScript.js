@@ -3,6 +3,7 @@ const BASE_URL = 'https://kick.com/'
 const LANG = 'en'
 const PLATFORM = 'kick'
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
+const PLATFORM_CLAIMTYPE = 16;
 
 var config = {}
 
@@ -60,7 +61,7 @@ source.getChannel = function (url) {
     const j = callUrl(`https://kick.com/api/v1/channels/${login}`)
 
     return new PlatformChannel({
-        id: new PlatformID(PLATFORM, j.id.toString(), config.id),
+        id: new PlatformID(PLATFORM, j.id.toString(), config.id, PLATFORM_CLAIMTYPE),
         name: j.user.username,
         thumbnail: j.user.profile_pic,
         banner: j.banner_image?.url,
@@ -323,7 +324,7 @@ function liveVideoToPlatformVideo(j) {
         name: j.user.username,
         thumbnails: new Thumbnails([new Thumbnail(j.livestream.thumbnail.url, 0)]),
         author: new PlatformAuthorLink(
-            new PlatformID(PLATFORM, j.user_id.toString(), config.id),
+            new PlatformID(PLATFORM, j.user_id.toString(), config.id, PLATFORM_CLAIMTYPE),
             j.user.username,
             BASE_URL + j.slug,
             j.user.profile_pic
@@ -345,7 +346,7 @@ function liveVideoToPlatformVideo(j) {
  */
 function searchChannelToPlatformChannel(c) {
     return new PlatformChannel({
-        id: new PlatformID(PLATFORM, c.id.toString(), config.id),
+        id: new PlatformID(PLATFORM, c.id.toString(), config.id, PLATFORM_CLAIMTYPE),
         name: c.user.username,
         thumbnail: c.user.profilePic,
         banner: '',
@@ -366,7 +367,7 @@ function streamToPlatformVideo(s) {
         name: s.session_title,
         thumbnails: new Thumbnails([new Thumbnail(s.thumbnail.src, 0)]),
         author: new PlatformAuthorLink(
-            new PlatformID(PLATFORM, s.channel.user.id.toString(), config.id),
+            new PlatformID(PLATFORM, s.channel.user.id.toString(), config.id, PLATFORM_CLAIMTYPE),
             s.channel.user.username,
             BASE_URL + s.channel.slug,
             s.channel.user.profilepic
@@ -390,7 +391,7 @@ function previousLivestreamToPlatformVideo(s, u, slug) {
         id: new PlatformID(PLATFORM, s.id.toString(), config.id),
         name: s.session_title,
         thumbnails: new Thumbnails([new Thumbnail(s.thumbnail.src, 0)]),
-        author: new PlatformAuthorLink(new PlatformID(PLATFORM, u.id.toString(), config.id), u.username, BASE_URL + slug, u.profile_pic),
+        author: new PlatformAuthorLink(new PlatformID(PLATFORM, u.id.toString(), config.id, PLATFORM_CLAIMTYPE), u.username, BASE_URL + slug, u.profile_pic),
         uploadDate: parseInt(new Date(s.created_at).getTime() / 1000),
         duration: s.duration / 1000,
         viewCount: s.views,
@@ -409,7 +410,7 @@ function savedVideoToPlatformVideo(j) {
         name: j.livestream.session_title,
         thumbnails: new Thumbnails([new Thumbnail(j.livestream.thumbnail)]),
         author: new PlatformAuthorLink(
-            new PlatformID(PLATFORM, j.livestream.channel.user_id.toString(), config.id),
+            new PlatformID(PLATFORM, j.livestream.channel.user_id.toString(), config.id, PLATFORM_CLAIMTYPE),
             j.livestream.channel.user.username,
             BASE_URL + j.livestream.channel.slug,
             j.livestream.channel.user.profilepic

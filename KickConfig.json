@@ -7,7 +7,7 @@
 	"sourceUrl": "https://autoupdate.unkto.com/sources/Kick/KickConfig.json",
 	"repositoryUrl": "https://futo.org",
 	"scriptUrl": "./KickScript.js",
-	"version": 1,
+	"version": 2,
 
 	"iconUrl": "./kick.png",
 	"id": "4a78c2ff-c20f-43ac-8f75-34515df1d320",
@@ -28,5 +28,7 @@
 		"cookiesToFind": ["kick_session", "XSRF-TOKEN"],
 		"completionUrl": "https://kick.com/broadcasting/auth",
 		"loginButton": "#login-button"
-	}
+	},
+
+	"supportedClaimTypes": [16]
 }
