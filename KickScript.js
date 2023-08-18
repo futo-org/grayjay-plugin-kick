@@ -74,6 +74,16 @@ source.getChannel = function (url) {
 source.getChannelContents = function (url) {
     return new ChannelVideoPager({ url, page_size: 20, cursor: null })
 }
+
+source.getChannelTemplateByClaimMap = () => {
+    return {
+        //Kick
+        16: {
+            0: URL_BASE + "{{CLAIMVALUE}}"
+        }
+    };
+};
+
 source.isContentDetailsUrl = function (url) {
     // https://kick.com/user or https://kick.com/video/uuiduuid-uuid-uuid-uuid-uuiduuiduuid
     return /kick\.com\/[a-zA-Z0-9-_]+\/?/.test(url) || /kick\.com\/video\/[a-zA-Z0-9-_]+\/?/.test(url)
