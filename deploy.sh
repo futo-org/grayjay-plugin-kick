@@ -7,9 +7,10 @@ touch $DOCUMENT_ROOT/maintenance.file
 
 # Swap over the content
 echo "Deploying content..."
-cp kick.png $DOCUMENT_ROOT/
-cp KickConfig.json $DOCUMENT_ROOT/
-cp KickScript.js $DOCUMENT_ROOT/
+mkdir -p $DOCUMENT_ROOT/Kick
+cp kick.png $DOCUMENT_ROOT/Kick
+cp KickConfig.json $DOCUMENT_ROOT/Kick
+cp KickScript.js $DOCUMENT_ROOT/Kick
 
 # Notify Cloudflare to wipe the CDN cache
 echo "Purging Cloudflare cache..."
