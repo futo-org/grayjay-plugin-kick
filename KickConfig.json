@@ -4,7 +4,7 @@
 	"author": "FUTO",
 	"authorUrl": "https://futo.org",
 	
-	"sourceUrl": "https://autoupdate.unkto.com/sources/Kick/KickConfig.json",
+	"sourceUrl": "https://plugins.grayjay.app/Kick/KickConfig.json",
 	"repositoryUrl": "https://futo.org",
 	"scriptUrl": "./KickScript.js",
 	"version": 3,
