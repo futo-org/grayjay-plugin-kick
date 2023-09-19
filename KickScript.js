@@ -107,6 +107,13 @@ source.getComments = function (url) {
 source.getSubComments = function (comment) {
     return new CommentPager([], false, {}) //Not implemented
 }
+source.getLiveChatWindow = function(url) {
+    const login = url.split('/').pop()
+    return {
+        url: "https://kick.com/" + login + "/chatroom",
+        removeElements: [ "#chatroom-top"]
+    };
+}
 source.getLiveEvents = function (url) {
     const login = url.split('/').pop()
 
