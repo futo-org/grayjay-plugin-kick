@@ -3,11 +3,12 @@
 	"description": "A live streaming platform, backed by Stake.com.",
 	"author": "FUTO",
 	"authorUrl": "https://futo.org",
-	
+
+	"platformUrl": "https://kick.com",
 	"sourceUrl": "https://plugins.grayjay.app/Kick/KickConfig.json",
 	"repositoryUrl": "https://futo.org",
 	"scriptUrl": "./KickScript.js",
-	"version": 5,
+	"version": 6,
 
 	"iconUrl": "./kick.png",
 	"id": "4a78c2ff-c20f-43ac-8f75-34515df1d320",
