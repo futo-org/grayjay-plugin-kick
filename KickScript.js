@@ -346,7 +346,7 @@ function liveVideoToPlatformVideo(j) {
             BASE_URL + j.slug,
             j.user.profile_pic
         ),
-        uploadDate: parseInt(new Date(j.created_at).getTime() / 1000),
+        uploadDate: (j.created_at) ? parseInt(new Date(j.created_at).getTime() / 1000) : parseInt(new Date().getTime() / 1000),
         duration: j.livestream.duration,
         viewCount: j.livestream.viewer_count,
         url: BASE_URL + j.slug,
