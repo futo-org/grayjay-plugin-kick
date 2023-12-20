@@ -134,6 +134,8 @@ function callUrl(url, use_authenticated = false, parse_response = true) {
         url,
         {
             'User-Agent': USER_AGENT,
+            Accept: 'application/json',
+            DNT: '1',
             Host: 'kick.com',
             Referer: 'https://kick.com/',
         },
