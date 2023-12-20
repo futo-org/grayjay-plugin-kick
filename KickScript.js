@@ -134,10 +134,8 @@ function callUrl(url, use_authenticated = false, parse_response = true) {
         url,
         {
             'User-Agent': USER_AGENT,
-            Accept: 'application/json',
-            DNT: '1',
             Host: 'kick.com',
-            Referer: 'kick.com',
+            Referer: 'https://kick.com/',
         },
         use_authenticated
     )
@@ -271,7 +269,7 @@ class LiveEventPagerHelper extends LiveEventPager {
         const j = callUrl(`https://kick.com/api/v2/channels/${resp.id}/messages`)
     
         const parsed = j.data.messages.map((m) => parseMessage(m))
-        const flat_map_emojis = parsed.flatMap((m) => m.emojis).filter((e) => e !== {})
+        const flat_map_emojis = parsed.flatMap((m) => m.emojis).filter((e) => e != {})
         let emojis = {}
         for (const emoji of flat_map_emojis) {
             emojis = { ...emojis, ...emoji }
