@@ -6,7 +6,7 @@
 
 	"platformUrl": "https://kick.com",
 	"sourceUrl": "https://plugins.grayjay.app/Kick/KickConfig.json",
-	"repositoryUrl": "https://futo.org",
+	"repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/kick",
 	"scriptUrl": "./KickScript.js",
 	"version": 10,
 
