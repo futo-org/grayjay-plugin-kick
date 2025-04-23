@@ -169,7 +169,8 @@ function callUrl(url, use_authenticated = false, parse_response = true, retries 
             
             if (attempts === 0) {
                 // All retry attempts failed
-                console.error(`Request failed after ${retries + 1} attempts:`, lastError);
+                log(`Request failed after ${retries + 1} attempts`);
+                log(lastError);
                 throw lastError;
             }
         }
