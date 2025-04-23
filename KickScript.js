@@ -128,33 +128,52 @@ source.getLiveEvents = function (url) {
  * @returns {string | Object} the response body as a string or the parsed json object
  * @throws {ScriptException}
  */
-function callUrl(url, use_authenticated = false, parse_response = true) {
+function callUrl(url, use_authenticated = false, parse_response = true, retries = 0) {
     // log("Integrity: " + INTEGRITY)
-    const resp = http.GET(
-        url,
-        {
-            'User-Agent': USER_AGENT,
-            Accept: 'application/json',
-            DNT: '1',
-            Host: 'kick.com',
-            Referer: 'https://kick.com/',
-        },
-        use_authenticated
-    )
+    let lastError;
+    let attempts = retries + 1; // +1 for the initial attempt
+    
+    while (attempts > 0) {
+        try {
 
-    if (!resp.isOk) {
-        throw new ScriptException(resp.statusMessage)
-    }
+            // bridge.toast(`retry : ${attempts}`);
 
-    if (parse_response) {
-        const json = JSON.parse(resp.body)
-        if (json.errors) {
-            throw new ScriptException(json.errors[0].message)
+            const resp = http.GET(
+                url,
+                {
+                    'User-Agent': USER_AGENT,
+                    Accept: 'application/json',
+                    DNT: '1',
+                    Host: 'kick.com',
+                    Referer: 'https://kick.com/',
+                },
+                use_authenticated
+            )
+            
+            if (!resp.isOk) {
+                throw new ScriptException(resp.statusMessage)
+            }
+            
+            if (parse_response) {
+                const json = JSON.parse(resp.body)
+                if (json.errors) {
+                    throw new ScriptException(json.errors[0].message)
+                }
+                return json
+            }
+            
+            return resp.body
+        } catch (error) {
+            lastError = error;
+            attempts--;
+            
+            if (attempts === 0) {
+                // All retry attempts failed
+                console.error(`Request failed after ${retries + 1} attempts:`, lastError);
+                throw lastError;
+            }
         }
-        return json
     }
-
-    return resp.body
 }
 /**
  * Returns a saved video
@@ -197,13 +216,13 @@ class HomePager extends VideoPager {
      */
     constructor(context) {
         /** @type {import("./types.d.ts").FeaturedStreamResponse} */
-        const json = callUrl(`https://kick.com/stream/livestreams/en?page=${context.page}&limit=${context.page_size}&sort=featured`)
+        const json = callUrl(`https://kick.com/stream/livestreams/en?page=${context.page}&limit=${context.page_size}&sort=featured`, false, true, 3)
 
         const results = json.data.map((s) => streamToPlatformVideo(s))
 
         super(results, json.next_page_url !== null, context)
     }
-
+    
     nextPage() {
         this.context.page++
         return new HomePager(this.context)
