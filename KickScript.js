@@ -149,9 +149,9 @@ function callUrl(url, use_authenticated = false, parse_response = true, retries 
                 },
                 use_authenticated
             )
-            
+
             if (!resp.isOk) {
-                throw new ScriptException(resp.statusMessage)
+                throw new ScriptException("Request [" + url + "] failed with code [" + resp.code + "]")
             }
             
             if (parse_response) {
