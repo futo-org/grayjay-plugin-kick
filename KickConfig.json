@@ -8,7 +8,7 @@
 	"sourceUrl": "https://plugins.grayjay.app/Kick/KickConfig.json",
 	"repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/kick",
 	"scriptUrl": "./KickScript.js",
-	"version": 13,
+	"version": 14,
 
 	"iconUrl": "./kick.png",
 	"id": "4a78c2ff-c20f-43ac-8f75-34515df1d320",
@@ -24,13 +24,25 @@
 	],
 	
 	"authentication": {
-		"userAgent": "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.5735.196 Mobile Safari/537.36",
+		"userAgent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36",
 		"loginUrl": "https://kick.com",
 		"headersToFind": ["Authorization"],
 		"cookiesToFind": ["session_token"],
 		"loginButton": "nav button:last-child",
 		"completionUrl": "https://kick.com/broadcasting/auth"
 	},
+	"captcha": {
+		"userAgent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36",
+		"captchaUrl": null,
+		"cookiesToFind": [
+			"cf_clearance"
+		]
+	},
 
-	"supportedClaimTypes": [16]
+	"supportedClaimTypes": [16],
+	"changelog": {
+		"15": [
+			"Improvement: Add captcha support;"
+		]
+	}
 }

@@ -2,7 +2,7 @@
 const BASE_URL = 'https://kick.com/'
 const LANG = 'en'
 const PLATFORM = 'kick'
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'
+const USER_AGENT = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36'
 const PLATFORM_CLAIMTYPE = 16;
 
 var config = {}
@@ -151,6 +151,9 @@ function callUrl(url, use_authenticated = false, parse_response = true, retries 
             )
 
             if (!resp.isOk) {
+
+                throwIfCaptcha(resp);
+
                 throw new ScriptException("Request [" + url + "] failed with code [" + resp.code + "]")
             }
             
@@ -462,4 +465,17 @@ function savedVideoToPlatformVideo(j) {
     })
 }
 
-console.log('LOADED')
+function throwIfCaptcha(resp) {
+    if (resp != null && resp.body != null && resp.code == 403) {
+
+        const body = resp.body.toLowerCase();
+
+		// Check for Cloudflare captcha
+        if (body.includes('/cdn-cgi/challenge-platform')) {
+            throw new CaptchaRequiredException(resp.url, resp.body);
+        }
+    }
+    return true;
+}
+
+log('LOADED')
