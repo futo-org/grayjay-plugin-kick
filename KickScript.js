@@ -110,8 +110,7 @@ source.getSubComments = function (comment) {
 source.getLiveChatWindow = function(url) {
     const login = url.split('/').pop()
     return {
-        url: "https://kick.com/" + login + "/chatroom",
-        removeElements: [ "#chatroom-top"]
+        url: "https://kick.com/popout/" + login + "/chat",
     };
 }
 source.getLiveEvents = function (url) {
