@@ -8,7 +8,7 @@
 	"sourceUrl": "https://plugins.grayjay.app/Kick/KickConfig.json",
 	"repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/kick",
 	"scriptUrl": "./KickScript.js",
-	"version": 15,
+	"version": 16,
 
 	"iconUrl": "./kick.png",
 	"id": "4a78c2ff-c20f-43ac-8f75-34515df1d320",
@@ -46,6 +46,9 @@
 		],
 		"15": [
 			"Improvement: Use live chat popout;"
+		],
+		"16":[
+			"Improvement: Add social links;"
 		]
 	}
 }

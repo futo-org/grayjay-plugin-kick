@@ -60,6 +60,56 @@ source.getChannel = function (url) {
     /** @type {import("./types.d.ts").ChannelResponse} */
     const j = callUrl(`https://kick.com/api/v1/channels/${login}`)
 
+   
+    const links = {};
+
+    const propertMaps = {
+        'instagram':  {
+            urlPrefix: 'https://instagram.com/',
+            displayName: 'Instagram',
+        },
+        'twitter':  {
+            urlPrefix: 'https://x.com/',
+            displayName: 'X',
+        },
+        'youtube':  {
+            urlPrefix: 'https://youtube.com/',
+            displayName: 'Youtube',
+        },
+        'discord':  {
+            urlPrefix: 'https://discord.gg/',
+            displayName: 'Discord',
+        },
+        'tiktok':  {
+            urlPrefix: 'https://tiktok.com/@',
+            displayName: 'Tiktok',
+        },
+        'facebook':  {
+            urlPrefix: 'https://facebook.com/',
+            displayName: 'Facebook',
+        },
+    }
+
+    for (const key in propertMaps) {
+        
+        let externalUrlProperty = j.user[key];
+        
+        if (externalUrlProperty) {
+
+            let externalUrl = '';
+
+            // check if it's an absolute url
+            if(/^https:\/\//i.test(externalUrlProperty)) {
+                externalUrl = externalUrlProperty;
+            }
+            else {
+                externalUrl = propertMaps[key].urlPrefix + externalUrlProperty;
+            }
+
+            links[propertMaps[key].displayName] = externalUrl;
+        }
+    }
+
     return new PlatformChannel({
         id: new PlatformID(PLATFORM, j.id.toString(), config.id, PLATFORM_CLAIMTYPE),
         name: j.user.username,
@@ -68,7 +118,7 @@ source.getChannel = function (url) {
         subscribers: j.followersCount,
         description: j.user.bio,
         url: BASE_URL + j.slug,
-        links: j.ascending_links.filter((l) => l.link !== '').map((l) => l.link),
+        links,
     })
 }
 source.getChannelContents = function (url) {
