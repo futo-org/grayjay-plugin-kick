@@ -53,7 +53,9 @@
 		"17": [
 			"Fix: Error playing some livestreams;",
 			"Fix: Livestream title;",
-			"Fix: Safer username extraction;"
+			"Fix: Safer username extraction from URLs;",
+			"Fix: Proper URL generation while sharing previous streamed videos;",
+			"Fix: Deeplinking previous streammed videos from Kick's website;"
 		]
 	}
 }

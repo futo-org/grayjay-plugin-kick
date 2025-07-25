@@ -135,11 +135,11 @@ source.getChannelTemplateByClaimMap = () => {
 };
 
 source.isContentDetailsUrl = function (url) {
-    // https://kick.com/user or https://kick.com/video/uuiduuid-uuid-uuid-uuid-uuiduuiduuid
-    return /kick\.com\/[a-zA-Z0-9-_]+\/?/.test(url) || /kick\.com\/video\/[a-zA-Z0-9-_]+\/?/.test(url)
+    // https://kick.com/user or https://kick.com/username/videos/uuid
+    return /kick\.com\/[a-zA-Z0-9-_]+\/?$/.test(url) || /kick\.com\/[a-zA-Z0-9-_]+\/videos\/[a-zA-Z0-9-_]+\/?/.test(url)
 }
 source.getContentDetails = function (url) {
-    if (url.includes('/video/')) {
+    if (url.includes('/videos/')) {
         return getSavedVideo(url)
     } else {
         return getLiveVideo(url)
@@ -175,11 +175,18 @@ source.getLiveEvents = function (url) {
  * @returns {string} The username
  */
 function extractUsername(url) {
-    // Match kick.com/username or kick.com/username/
-    const match = url.match(/kick\.com\/([a-zA-Z0-9-_]+)\/?$/);
+    // Match kick.com/username/videos/uuid
+    let match = url.match(/kick\.com\/([a-zA-Z0-9-_]+)\/videos\/[a-zA-Z0-9-_]+/);
     if (match) {
         return match[1];
     }
+    
+    // Match kick.com/username or kick.com/username/
+    match = url.match(/kick\.com\/([a-zA-Z0-9-_]+)\/?$/);
+    if (match) {
+        return match[1];
+    }
+    
     // If no match, fallback to the old method as safety
     return url.split('/').pop();
 }
@@ -493,15 +500,25 @@ function streamToPlatformVideo(s) {
  * @returns { PlatformVideo }
  */
 function previousLivestreamToPlatformVideo(s, u, slug) {
+    const username = u.username ?? slug;
     return new PlatformVideo({
         id: new PlatformID(PLATFORM, s.id.toString(), config.id),
         name: s.session_title,
         thumbnails: new Thumbnails([new Thumbnail(s.thumbnail.src, 0)]),
-        author: new PlatformAuthorLink(new PlatformID(PLATFORM, u.id.toString(), config.id, PLATFORM_CLAIMTYPE), u.username, BASE_URL + slug, u.profile_pic),
+        author: new PlatformAuthorLink(
+            new PlatformID(
+                PLATFORM, 
+                u.id.toString(), 
+                config.id, 
+                PLATFORM_CLAIMTYPE
+            ), u.username, 
+            BASE_URL + slug, 
+            u.profile_pic
+        ),
         uploadDate: parseInt(new Date(s.created_at).getTime() / 1000),
         duration: s.duration / 1000,
         viewCount: s.views,
-        url: BASE_URL + 'video/' + s.video.uuid,
+        url: `https://kick.com/${username}/videos/${s.video.uuid}`,
         isLive: false,
     })
 }
@@ -524,7 +541,7 @@ function savedVideoToPlatformVideo(j) {
         uploadDate: parseInt(new Date(j.created_at).getTime() / 1000),
         duration: j.livestream.duration,
         viewCount: j.views,
-        url: BASE_URL + 'video/' + j.uuid,
+        url: `${BASE_URL}${j.livestream.channel.slug}/videos/${j.uuid}`,
         isLive: false,
         description: j.livestream.channel.user.bio,
         video: new VideoSourceDescriptor([new HLSSource({ name: 'hls', duration: j.livestream.duration, url: j.source })]),
