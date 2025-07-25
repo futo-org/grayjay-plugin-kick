@@ -121,7 +121,7 @@ source.getChannel = function (url) {
         links,
     })
 }
-source.getChannelContents = function (url) {
+source.getChannelContents = function (url, type, order, filters) {
     return new ChannelVideoPager({ url, page_size: 20, cursor: null })
 }
 
@@ -139,11 +139,20 @@ source.isContentDetailsUrl = function (url) {
     return /kick\.com\/[a-zA-Z0-9-_]+\/?$/.test(url) || /kick\.com\/[a-zA-Z0-9-_]+\/videos\/[a-zA-Z0-9-_]+\/?/.test(url)
 }
 source.getContentDetails = function (url) {
+
+    let videoDetails;
+
     if (url.includes('/videos/')) {
-        return getSavedVideo(url)
+        videoDetails = getSavedVideo(url)
     } else {
-        return getLiveVideo(url)
+        videoDetails = getLiveVideo(url)
     }
+
+    videoDetails.getContentRecommendations = function() {
+		return source.getContentRecommendations(url);
+	};
+
+    return videoDetails;
 }
 source.getUserSubscriptions = function () {
     /** @type {import("./types.d.ts").FollowedChannelResponse} */
@@ -151,6 +160,18 @@ source.getUserSubscriptions = function () {
 
     return j.channels.map((c) => BASE_URL + c.channel_slug)
 }
+
+source.getContentRecommendations = function (url) {
+    const username = extractUsername(url);
+    const channelUrl = BASE_URL + username;
+    const pager = source.getChannelContents(channelUrl);
+
+    // remove the current video
+    pager.results = pager.results.filter((v) => v.url !== url);
+
+    return pager;
+}
+
 source.getComments = function (url) {
     return new CommentPager([], false, {}) //Not implemented
 }
