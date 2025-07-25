@@ -51,7 +51,8 @@
 			"Improvement: Add social links;"
 		],
 		"17": [
-			"Fix: Error playing some livestreams;"
+			"Fix: Error playing some livestreams;",
+			"Fix: Livestream title;"
 		]
 	}
 }

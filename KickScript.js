@@ -408,10 +408,13 @@ class ChannelVideoPager extends VideoPager {
  * @returns {PlatformVideoDetails}
  */
 function liveVideoToPlatformVideo(j) {
+    
     const thumbnails = j?.livestream?.thumbnail?.url ? [new Thumbnail(j.livestream.thumbnail.url, 0)] : [];
+    const streamTitle = j?.livestream?.session_title ?? j.user.username;
+
     return new PlatformVideoDetails({
         id: new PlatformID(PLATFORM, j.livestream.id.toString(), config.id),
-        name: j.user.username,
+        name: streamTitle,
         thumbnails: new Thumbnails(thumbnails),
         author: new PlatformAuthorLink(
             new PlatformID(PLATFORM, j.user_id.toString(), config.id, PLATFORM_CLAIMTYPE),
