@@ -408,10 +408,11 @@ class ChannelVideoPager extends VideoPager {
  * @returns {PlatformVideoDetails}
  */
 function liveVideoToPlatformVideo(j) {
+    const thumbnails = j?.livestream?.thumbnail?.url ? [new Thumbnail(j.livestream.thumbnail.url, 0)] : [];
     return new PlatformVideoDetails({
         id: new PlatformID(PLATFORM, j.livestream.id.toString(), config.id),
         name: j.user.username,
-        thumbnails: new Thumbnails([new Thumbnail(j.livestream.thumbnail.url, 0)]),
+        thumbnails: new Thumbnails(thumbnails),
         author: new PlatformAuthorLink(
             new PlatformID(PLATFORM, j.user_id.toString(), config.id, PLATFORM_CLAIMTYPE),
             j.user.username,
@@ -419,11 +420,11 @@ function liveVideoToPlatformVideo(j) {
             j.user.profile_pic
         ),
         uploadDate: (j.created_at) ? parseInt(new Date(j.created_at).getTime() / 1000) : parseInt(new Date().getTime() / 1000),
-        duration: j.livestream.duration,
-        viewCount: j.livestream.viewer_count,
+        duration: j?.livestream?.duration ?? 0 ,
+        viewCount: j?.livestream?.viewer_count ?? 0,
         url: BASE_URL + j.slug,
         isLive: true,
-        description: j.user.bio,
+        description: j?.user?.bio ?? '',
         video: new VideoSourceDescriptor([]),
         live: new HLSSource({ name: 'live', duration: 0, url: j.playback_url }),
     })
