@@ -55,7 +55,7 @@ source.isChannelUrl = function (url) {
     return /kick\.com\/[a-zA-Z0-9-_]+\/?/.test(url)
 }
 source.getChannel = function (url) {
-    const login = url.split('/').pop()
+    const login = extractUsername(url)
 
     /** @type {import("./types.d.ts").ChannelResponse} */
     const j = callUrl(`https://kick.com/api/v1/channels/${login}`)
@@ -158,17 +158,31 @@ source.getSubComments = function (comment) {
     return new CommentPager([], false, {}) //Not implemented
 }
 source.getLiveChatWindow = function(url) {
-    const login = url.split('/').pop()
+    const login = extractUsername(url)
     return {
         url: "https://kick.com/popout/" + login + "/chat",
     };
 }
 source.getLiveEvents = function (url) {
-    const login = url.split('/').pop()
+    const login = extractUsername(url)
 
     return new LiveEventPagerHelper(login)
 }
 //* Internals
+/**
+ * Extracts the username from a Kick URL
+ * @param {string} url - The URL to extract username from
+ * @returns {string} The username
+ */
+function extractUsername(url) {
+    // Match kick.com/username or kick.com/username/
+    const match = url.match(/kick\.com\/([a-zA-Z0-9-_]+)\/?$/);
+    if (match) {
+        return match[1];
+    }
+    // If no match, fallback to the old method as safety
+    return url.split('/').pop();
+}
 /**
  * Gets the requested url and returns the response body either as a string or as a parsed json object
  * @param {string} url the url to call
@@ -248,7 +262,7 @@ function getSavedVideo(url) {
  * @returns {PlatformVideoDetails}
  */
 function getLiveVideo(url, throw_if_not_live = true) {
-    const login = url.split('/').pop()
+    const login = extractUsername(url)
 
     /** @type {import("./types.d.ts").ChannelResponse} */
     const j = callUrl(`https://kick.com/api/v2/channels/${login}`)
@@ -387,8 +401,7 @@ class ChannelVideoPager extends VideoPager {
      * @param {import("./types.d.ts").URLContext} context the context
      */
     constructor(context) {
-        const login = context.url.split('/').pop()
-
+        const login = extractUsername(context.url);
         /** @type {import("./types.d.ts").ChannelResponse} */
         const j = callUrl(`https://kick.com/api/v1/channels/${login}`)
 

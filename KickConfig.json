@@ -52,7 +52,8 @@
 		],
 		"17": [
 			"Fix: Error playing some livestreams;",
-			"Fix: Livestream title;"
+			"Fix: Livestream title;",
+			"Fix: Safer username extraction;"
 		]
 	}
 }
