@@ -26,14 +26,16 @@ source.searchSuggestions = function (query) {
         'X-TYPESENSE-API-KEY': 'nXIMW0iEN6sMujFYjFuhdrSwVow3pDQu',
     })
 
-    const json = JSON.parse(result.body)
-
-
-    if (!('results' in json) || json.results.length === 0) {
+    let json;
+    try {
+        json = JSON.parse(result.body)
+    } catch (e) {
+        log('Failed to parse search suggestions response: ' + e);
         return []
     }
 
-    return json.results[0].hits.map((h) => h.document.username)
+    return (json?.results?.[0]?.hits ?? [])
+    .map((h) => h.document.username)
 }
 source.getSearchCapabilities = () => {
     return { types: [Type.Feed.Mixed], sorts: [], filters: [] }
@@ -91,7 +93,7 @@ source.getChannel = function (url) {
 
     for (const key in propertMaps) {
         
-        let externalUrlProperty = j.user[key];
+        let externalUrlProperty = j?.user?.[key];
         
         if (externalUrlProperty) {
 
@@ -128,7 +130,7 @@ source.getChannelTemplateByClaimMap = () => {
     return {
         //Kick
         16: {
-            0: URL_BASE + "{{CLAIMVALUE}}"
+            0: BASE_URL + "{{CLAIMVALUE}}"
         }
     };
 };
@@ -440,7 +442,7 @@ class LiveEventPagerHelper extends LiveEventPager {
         /** @type {import("./types.d.ts").PrepopulateChatResponse}*/
         const j = callUrl(`https://kick.com/api/v2/channels/${resp.id}/messages`)
     
-        const parsed = j.data.messages.map((m) => parseMessage(m))
+        const parsed = (j?.data?.messages ?? []).map((m) => parseMessage(m))
         const flat_map_emojis = parsed.flatMap((m) => m.emojis).filter((e) => e != {})
         let emojis = {}
         for (const emoji of flat_map_emojis) {
