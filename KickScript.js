@@ -5,7 +5,7 @@ const PLATFORM = 'kick'
 const USER_AGENT = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36'
 const PLATFORM_CLAIMTYPE = 16;
 
-var config = {}
+let config = {}
 
 //* Source
 source.enable = function (conf) {}
@@ -59,7 +59,6 @@ source.getChannel = function (url) {
 
     /** @type {import("./types.d.ts").ChannelResponse} */
     const j = callUrl(`https://kick.com/api/v1/channels/${login}`)
-
    
     const links = {};
 
@@ -156,20 +155,52 @@ source.getContentDetails = function (url) {
 }
 source.getUserSubscriptions = function () {
     /** @type {import("./types.d.ts").FollowedChannelResponse} */
-    const j = callUrl('https://kick.com/api/v2/channels/followed?cursor=0', true)
+    const j = httpGET({ url: 'https://kick.com/api/v2/channels/followed?cursor=0', useAuthenticated: true })
 
     return j.channels.map((c) => BASE_URL + c.channel_slug)
 }
 
 source.getContentRecommendations = function (url) {
-    const username = extractUsername(url);
-    const channelUrl = BASE_URL + username;
-    const pager = source.getChannelContents(channelUrl);
 
-    // remove the current video
-    pager.results = pager.results.filter((v) => v.url !== url);
+    if (url.includes('/videos/')) {
+        const username = extractUsername(url);
+        const channelUrl = BASE_URL + username;
+        const pager = source.getChannelContents(channelUrl);
 
-    return pager;
+        // remove the current video
+        pager.results = pager.results.filter((v) => v.url !== url);
+
+        return pager;
+    } else {
+        const res = httpGET({ 
+            url: 'https://web.kick.com/api/v1/livestreams/featured?language=en', 
+            useAuthenticated: false, 
+            parseResponse: true, 
+            retries: 4, 
+            headers: {
+                Accept: 'application/json',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Alt-Used': 'web.kick.com',
+                'Cache-Control': 'no-cache',
+                Connection: 'keep-alive',
+                Origin: 'https://kick.com',
+                Pragma: 'no-cache',
+                Priority: 'u=4',
+                'Sec-Fetch-Dest': 'empty',
+                'Sec-Fetch-Mode': 'cors',
+                'Sec-Fetch-Site': 'same-site',
+                'Sec-GPC': '1',
+                TE: 'trailers',
+                'User-Agent': USER_AGENT,
+            }
+        });
+        
+        const results = (res?.data?.livestreams ?? [])
+        ?.map((l) => streamToPlatformVideo(l))
+        ?.filter((l) => l?.url != url); // remove the current video
+        
+        return new VideoPager(results, false);
+    }
 }
 
 source.getComments = function (url) {
@@ -211,15 +242,37 @@ function extractUsername(url) {
     // If no match, fallback to the old method as safety
     return url.split('/').pop();
 }
+
+/**
+ * Simple wrapper for making GET requests to Kick API endpoints
+ * @param {string} url - The URL to fetch
+ * @returns {Object} The parsed JSON response
+ * @throws {ScriptException} If the request fails or returns an error
+ */
+function callUrl(url) {
+    return httpGET({ url })
+}
+
 /**
  * Gets the requested url and returns the response body either as a string or as a parsed json object
- * @param {string} url the url to call
- * @param {boolean} use_authenticated if true, will use the authenticated headers
- * @param {boolean} parse if true, will parse the response as json and check for errors
+ * @param {Object} options - The options object
+ * @param {string} options.url - The URL to call
+ * @param {boolean} [options.useAuthenticated=false] - If true, will use the authenticated headers
+ * @param {boolean} [options.parseResponse=true] - If true, will parse the response as json and check for errors
+ * @param {number} [options.retries=0] - Number of retry attempts
+ * @param {Object} [options.headers=null] - Custom headers to use for the request
  * @returns {string | Object} the response body as a string or the parsed json object
  * @throws {ScriptException}
  */
-function callUrl(url, use_authenticated = false, parse_response = true, retries = 0) {
+function httpGET(options) {
+    const {
+        url,
+        useAuthenticated = false,
+        parseResponse = true,
+        retries = 0,
+        headers = null
+    } = options;
+    
     // log("Integrity: " + INTEGRITY)
     let lastError;
     let attempts = retries + 1; // +1 for the initial attempt
@@ -227,18 +280,18 @@ function callUrl(url, use_authenticated = false, parse_response = true, retries 
     while (attempts > 0) {
         try {
 
-            // bridge.toast(`retry : ${attempts}`);
+            const localHeaders = headers ?? {
+                'User-Agent': USER_AGENT,
+                Accept: 'application/json',
+                DNT: '1',
+                Host: 'kick.com',
+                Referer: 'https://kick.com/',
+            }
 
             const resp = http.GET(
                 url,
-                {
-                    'User-Agent': USER_AGENT,
-                    Accept: 'application/json',
-                    DNT: '1',
-                    Host: 'kick.com',
-                    Referer: 'https://kick.com/',
-                },
-                use_authenticated
+                localHeaders,
+                useAuthenticated
             )
 
             if (!resp.isOk) {
@@ -248,7 +301,7 @@ function callUrl(url, use_authenticated = false, parse_response = true, retries 
                 throw new ScriptException("Request [" + url + "] failed with code [" + resp.code + "]")
             }
             
-            if (parse_response) {
+            if (parseResponse) {
                 const json = JSON.parse(resp.body)
                 if (json.errors) {
                     throw new ScriptException(json.errors[0].message)
@@ -311,7 +364,10 @@ class HomePager extends VideoPager {
      */
     constructor(context) {
         /** @type {import("./types.d.ts").FeaturedStreamResponse} */
-        const json = callUrl(`https://kick.com/stream/livestreams/en?page=${context.page}&limit=${context.page_size}&sort=featured`, false, true, 3)
+        const json = httpGET({ 
+            url: `https://kick.com/stream/livestreams/en?page=${context.page}&limit=${context.page_size}&sort=featured`, 
+            retries: 3 
+        })
 
         const results = json.data.map((s) => streamToPlatformVideo(s))
 
@@ -496,20 +552,27 @@ function searchChannelToPlatformChannel(c) {
  * @returns { PlatformVideo }
  */
 function streamToPlatformVideo(s) {
+    
+    const channelId = s?.channel?.user?.id?.toString() ?? s?.channel?.id?.toString();
+    const channelSlug =  s?.channel?.user?.slug ?? s?.channel?.slug;
+    const channelUsername = s?.channel?.user?.username ?? s?.channel?.username;
+    const channelProfilePic = s?.channel?.user?.profilepic ?? s?.channel?.profile_pic;
+    const name = s?.session_title ?? s.title ?? '';
+
     return new PlatformVideo({
         id: new PlatformID(PLATFORM, s.id.toString(), config.id),
-        name: s.session_title,
+        name,
         thumbnails: new Thumbnails([new Thumbnail(s.thumbnail.src, 0)]),
         author: new PlatformAuthorLink(
-            new PlatformID(PLATFORM, s.channel.user.id.toString(), config.id, PLATFORM_CLAIMTYPE),
-            s.channel.user.username,
-            BASE_URL + s.channel.slug,
-            s.channel.user.profilepic
+            new PlatformID(PLATFORM, channelId, config.id, PLATFORM_CLAIMTYPE),
+            channelUsername,
+            BASE_URL + channelSlug,
+            channelProfilePic
         ),
         uploadDate: parseInt(new Date(s.created_at + ' UTC').getTime() / 1000),
         duration: s.duration,
         viewCount: s.viewer_count,
-        url: BASE_URL + s.channel.slug,
+        url: BASE_URL + channelSlug,
         isLive: true,
     })
 }
@@ -570,7 +633,7 @@ function savedVideoToPlatformVideo(j) {
 }
 
 function throwIfCaptcha(resp) {
-    if (resp != null && resp.body != null && resp.code == 403) {
+    if (resp?.body && resp?.code == 403) {
 
         const body = resp.body.toLowerCase();
 
