@@ -8,7 +8,7 @@
 	"sourceUrl": "https://plugins.grayjay.app/Kick/KickConfig.json",
 	"repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/kick",
 	"scriptUrl": "./KickScript.js",
-	"version": 16,
+	"version": 17,
 
 	"iconUrl": "./kick.png",
 	"id": "4a78c2ff-c20f-43ac-8f75-34515df1d320",
@@ -49,6 +49,14 @@
 		],
 		"16":[
 			"Improvement: Add social links;"
+		],
+		"17": [
+			"Improvement: Add content recommendations;",
+			"Fix: Error playing some livestreams;",
+			"Fix: Livestream title;",
+			"Fix: Safer username extraction from URLs;",
+			"Fix: Proper URL generation while sharing previous streamed videos;",
+			"Fix: Deeplinking previous streammed videos from Kick's website;"
 		]
 	}
 }
