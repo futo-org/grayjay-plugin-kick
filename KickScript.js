@@ -2,7 +2,13 @@
 const BASE_URL = 'https://kick.com/'
 const LANG = 'en'
 const PLATFORM = 'kick'
-const USER_AGENT = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36'
+
+const IS_DESKTOP = bridge.buildPlatform === "desktop";
+
+const USER_AGENT_MOBILE = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36';
+const USER_AGENT_DESKTOP = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
+const USER_AGENT = IS_DESKTOP ? USER_AGENT_DESKTOP : USER_AGENT_MOBILE;
+
 const PLATFORM_CLAIMTYPE = 16;
 
 let config = {}
@@ -271,7 +277,7 @@ function httpGET(options) {
         url,
         useAuthenticated = false,
         parseResponse = true,
-        retries = 0,
+        retries = 3,
         headers = null
     } = options;
     
@@ -367,8 +373,7 @@ class HomePager extends VideoPager {
     constructor(context) {
         /** @type {import("./types.d.ts").FeaturedStreamResponse} */
         const json = httpGET({ 
-            url: `https://kick.com/stream/livestreams/en?page=${context.page}&limit=${context.page_size}&sort=featured`, 
-            retries: 3 
+            url: `https://kick.com/stream/livestreams/en?page=${context.page}&limit=${context.page_size}&sort=featured`
         })
 
         const results = json.data.map((s) => streamToPlatformVideo(s))

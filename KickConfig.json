@@ -8,7 +8,7 @@
 	"sourceUrl": "https://plugins.grayjay.app/Kick/KickConfig.json",
 	"repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/kick",
 	"scriptUrl": "./KickScript.js",
-	"version": 18,
+	"version": 19,
 
 	"iconUrl": "./kick.png",
 	"id": "4a78c2ff-c20f-43ac-8f75-34515df1d320",
@@ -23,7 +23,6 @@
 		"search.kick.com",
 		"web.kick.com"
 	],
-	
 	"authentication": {
 		"userAgent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36",
 		"loginUrl": "https://kick.com",
@@ -32,6 +31,15 @@
 		"loginButton": "nav button:last-child",
 		"completionUrl": "https://kick.com/broadcasting/auth"
 	},
+    "authenticationDesktop": {
+		"userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+        "loginUrl": "https://kick.com",
+        "headersToFind": ["Authorization"],
+        "cookiesToFind": ["session_token"],
+        "loginButton": "nav button:last-child",
+        "completionUrl": "https://kick.com/broadcasting/auth",
+        "useMobileEmulation": false
+    },
 	"captcha": {
 		"userAgent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36",
 		"captchaUrl": null,
@@ -39,17 +47,15 @@
 			"cf_clearance"
 		]
 	},
-
 	"supportedClaimTypes": [16],
 	"changelog": {
-		"14": [
-			"Improvement: Add captcha support;"
+		"19": [
+			"Fix: desktop authentication;",
+			"Fix: importing user subscriptions;",
+			"Improvement: retry all requests at least 3 times;"
 		],
-		"15": [
-			"Improvement: Use live chat popout;"
-		],
-		"16":[
-			"Improvement: Add social links;"
+		"18": [
+			"Improvement: When playing livestreams show featured streams as recommendations. Otherwise show previous streams from the channel;"
 		],
 		"17": [
 			"Improvement: Add content recommendations;",
@@ -59,8 +65,14 @@
 			"Fix: Proper URL generation while sharing previous streamed videos;",
 			"Fix: Deeplinking previous streammed videos from Kick's website;"
 		],
-		"18": [
-			"Improvement: When playing livestreams show featured streams as recommendations. Otherwise show previous streams from the channel;"
+		"16":[
+			"Improvement: Add social links;"
+		],
+		"15": [
+			"Improvement: Use live chat popout;"
+		],
+		"14": [
+			"Improvement: Add captcha support;"
 		]
 	}
 }
