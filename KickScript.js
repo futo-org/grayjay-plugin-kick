@@ -296,7 +296,7 @@ function httpGET(options) {
                 Referer: 'https://kick.com/',
             }
 
-            const resp = http.GET(
+            const resp = (httpimp ?? http).GET(
                 url,
                 localHeaders,
                 useAuthenticated
