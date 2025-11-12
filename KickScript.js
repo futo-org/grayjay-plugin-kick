@@ -296,12 +296,12 @@ function httpGET(options) {
                 Referer: 'https://kick.com/',
             }
 
-            const resp = (httpimp ?? http).GET(
+            const httpClient = (typeof httpimp !== 'undefined') ? httpimp : http;
+            const resp = httpClient.GET(
                 url,
                 localHeaders,
                 useAuthenticated
             )
-
             if (!resp.isOk) {
 
                 throwIfCaptcha(resp);

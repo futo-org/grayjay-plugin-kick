@@ -8,7 +8,7 @@
 	"sourceUrl": "https://plugins.grayjay.app/Kick/KickConfig.json",
 	"repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/kick",
 	"scriptUrl": "./KickScript.js",
-	"version": 19,
+	"version": 20,
 
 	"iconUrl": "./kick.png",
 	"id": "4a78c2ff-c20f-43ac-8f75-34515df1d320",
@@ -50,6 +50,9 @@
 	},
 	"supportedClaimTypes": [16],
 	"changelog": {
+		"20": [
+			"Fix: check for optional package;"
+		],
 		"19": [
 			"Fix: desktop authentication;",
 			"Fix: importing user subscriptions;",
