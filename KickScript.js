@@ -619,6 +619,7 @@ function previousLivestreamToPlatformVideo(s, u, slug) {
  * @returns {PlatformVideoDetails}
  */
 function savedVideoToPlatformVideo(j) {
+    const duration = j.livestream?.duration ? j.livestream.duration / 1000 : 0;
     return new PlatformVideoDetails({
         id: new PlatformID(PLATFORM, j.id.toString(), config.id),
         name: j.livestream.session_title,
@@ -630,12 +631,12 @@ function savedVideoToPlatformVideo(j) {
             j.livestream.channel.user.profilepic
         ),
         uploadDate: parseInt(new Date(j.created_at).getTime() / 1000),
-        duration: j.livestream.duration,
+        duration: duration,
         viewCount: j.views,
         url: `${BASE_URL}${j.livestream.channel.slug}/videos/${j.uuid}`,
         isLive: false,
         description: j.livestream.channel.user.bio,
-        video: new VideoSourceDescriptor([new HLSSource({ name: 'hls', duration: j.livestream.duration, url: j.source })]),
+        video: new VideoSourceDescriptor([new HLSSource({ name: 'hls', duration: duration, url: j.source })]),
     })
 }
 
