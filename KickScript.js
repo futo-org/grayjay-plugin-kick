@@ -325,7 +325,9 @@ function httpGET(options) {
             if (attempts === 0) {
                 // All retry attempts failed
                 log(`Request failed after ${retries + 1} attempts`);
-                log(lastError);
+                if(IS_TESTING) {
+                    log(lastError);
+                }
                 throw lastError;
             }
         }
