@@ -1,88 +1,145 @@
 {
-	"name": "Kick (Beta)",
-	"description": "A live streaming platform, backed by Stake.com.",
-	"author": "FUTO",
-	"authorUrl": "https://futo.org",
-
-	"platformUrl": "https://kick.com",
-	"sourceUrl": "https://plugins.grayjay.app/Kick/KickConfig.json",
-	"repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/kick",
-	"scriptUrl": "./KickScript.js",
-	"version": 22,
-
-	"iconUrl": "./kick.png",
-	"id": "4a78c2ff-c20f-43ac-8f75-34515df1d320",
-
-	"scriptSignature": "",
-	"scriptPublicKey": "",
-	"packages": ["Http"],
-	"packagesOptional": ["HttpImp"],
-	
-	"allowEval": false,
-	"allowUrls": [
-		"kick.com",
-		"search.kick.com",
-		"web.kick.com"
-	],
-	"authentication": {
-		"userAgent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36",
-		"loginUrl": "https://kick.com",
-		"headersToFind": ["Authorization"],
-		"cookiesToFind": ["session_token"],
-		"loginButton": "nav button:last-child",
-		"completionUrl": "https://kick.com/broadcasting/auth"
-	},
-    "authenticationDesktop": {
-		"userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
-        "loginUrl": "https://kick.com",
-        "headersToFind": ["Authorization"],
-        "cookiesToFind": ["session_token"],
-        "loginButton": "nav button:last-child",
-        "completionUrl": "https://kick.com/broadcasting/auth",
-        "useMobileEmulation": false
+  "name": "Kick (Beta)",
+  "description": "A live streaming platform, backed by Stake.com.",
+  "author": "FUTO",
+  "authorUrl": "https://futo.org",
+  "platformUrl": "https://kick.com",
+  "sourceUrl": "https://plugins.grayjay.app/Kick/KickConfig.json",
+  "repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/kick",
+  "scriptUrl": "./KickScript.js",
+  "version": 23,
+  "iconUrl": "./kick.png",
+  "id": "4a78c2ff-c20f-43ac-8f75-34515df1d320",
+  "scriptSignature": "",
+  "scriptPublicKey": "",
+  "packages": [
+    "Http"
+  ],
+  "packagesOptional": [
+    "HttpImp"
+  ],
+  "allowEval": false,
+  "allowUrls": [
+    "kick.com",
+    "search.kick.com",
+    "web.kick.com"
+  ],
+  "authentication": {
+    "userAgent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36",
+    "loginUrl": "https://kick.com",
+    "headersToFind": [
+      "Authorization"
+    ],
+    "cookiesToFind": [
+      "session_token"
+    ],
+    "loginButton": "nav button:last-child",
+    "completionUrl": "https://kick.com/broadcasting/auth"
+  },
+  "authenticationDesktop": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "loginUrl": "https://kick.com",
+    "headersToFind": [
+      "Authorization"
+    ],
+    "cookiesToFind": [
+      "session_token"
+    ],
+    "loginButton": "nav button:last-child",
+    "completionUrl": "https://kick.com/broadcasting/auth",
+    "useMobileEmulation": false
+  },
+  "captcha": {
+    "userAgent": null,
+    "captchaUrl": null,
+    "cookiesToFind": [
+      "cf_clearance"
+    ]
+  },
+  "supportedClaimTypes": [
+    16
+  ],
+  "captchaDesktop": {
+    "captchaUrl": null,
+    "cookiesToFind": [
+      "cf_clearance"
+    ],
+    "useMobileEmulation": false
+  },
+  "settings": [
+    {
+      "variable": "useHttp",
+      "name": "HTTP",
+      "description": "Use the standard HTTP client for requests",
+      "type": "Boolean",
+      "default": "true"
     },
-	"captcha": {
-		"userAgent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36",
-		"captchaUrl": null,
-		"cookiesToFind": [
-			"cf_clearance"
-		]
-	},
-	"supportedClaimTypes": [16],
-	"changelog": {
-		"22": [
-			"Fix: reflexion issue logging exceptions in desktop;"
-		],
-		"21": [
-			"Fix: duration while casting;"
-		],
-		"20": [
-			"Fix: check for optional package;"
-		],
-		"19": [
-			"Fix: desktop authentication;",
-			"Fix: importing user subscriptions;",
-			"Improvement: retry all requests at least 3 times;"
-		],
-		"18": [
-			"Improvement: When playing livestreams show featured streams as recommendations. Otherwise show previous streams from the channel;"
-		],
-		"17": [
-			"Improvement: Add content recommendations;",
-			"Fix: Error playing some livestreams;",
-			"Fix: Livestream title;",
-			"Fix: Safer username extraction from URLs;",
-			"Fix: Proper URL generation while sharing previous streamed videos;",
-			"Fix: Deeplinking previous streammed videos from Kick's website;"
-		],
-		"16":[
-			"Improvement: Add social links;"
-		],
-		"15": [
-			"Improvement: Use live chat popout;"
-		],
-		"14": [
-			"Improvement: Add captcha support;"
-		]
-	}
+    {
+      "variable": "useRequestRetries",
+      "name": "Request Retries",
+      "description": "Retry failed HTTP requests up to 3 times before falling back",
+      "type": "Boolean",
+      "default": "true"
+    },
+    {
+      "variable": "useHttpImpersonation",
+      "name": "HTTP Impersonation",
+      "description": "Use browser impersonation (HttpImp) to bypass bot detection",
+      "type": "Boolean",
+      "default": "true"
+    },
+    {
+      "variable": "useStreamImpersonation",
+      "name": "Stream Impersonation",
+      "description": "Use browser impersonation when playing streams",
+      "type": "Boolean",
+      "default": "false"
+    },
+    {
+      "variable": "verboseNotifications",
+      "name": "Verbose notifications",
+      "description": "Show toast notifications for HTTP request details (useful for debugging)",
+      "type": "Boolean",
+      "default": "false"
+    }
+  ],
+  "changelog": {
+    "23": [
+      "Fix: Captcha issues;"
+    ],
+    "22": [
+      "Fix: reflexion issue logging exceptions in desktop;"
+    ],
+    "21": [
+      "Fix: duration while casting;"
+    ],
+    "20": [
+      "Fix: check for optional package;"
+    ],
+    "19": [
+      "Fix: desktop authentication;",
+      "Fix: importing user subscriptions;",
+      "Improvement: retry all requests at least 3 times;"
+    ],
+    "18": [
+      "Improvement: When playing livestreams show featured streams as recommendations. Otherwise show previous streams from the channel;"
+    ],
+    "17": [
+      "Improvement: Add content recommendations;",
+      "Fix: Error playing some livestreams;",
+      "Fix: Livestream title;",
+      "Fix: Safer username extraction from URLs;",
+      "Fix: Proper URL generation while sharing previous streamed videos;",
+      "Fix: Deeplinking previous streammed videos from Kick's website;"
+    ],
+    "16": [
+      "Improvement: Add social links;"
+    ],
+    "15": [
+      "Improvement: Use live chat popout;"
+    ],
+    "14": [
+      "Improvement: Add captcha support;"
+    ]
+  }
 }

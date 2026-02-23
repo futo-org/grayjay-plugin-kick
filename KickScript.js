@@ -5,16 +5,32 @@ const PLATFORM = 'kick'
 
 const IS_DESKTOP = bridge.buildPlatform === "desktop";
 
-const USER_AGENT_MOBILE = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36';
-const USER_AGENT_DESKTOP = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
-const USER_AGENT = IS_DESKTOP ? USER_AGENT_DESKTOP : USER_AGENT_MOBILE;
+const USER_AGENT_FALLBACK = IS_DESKTOP
+    ? 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36'
+    : 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36';
+    
+const getUserAgent = () => bridge.authUserAgent ?? bridge.captchaUserAgent ?? USER_AGENT_FALLBACK;
 
 const PLATFORM_CLAIMTYPE = 16;
 
+const IMPERSONATION_TARGET = IS_DESKTOP ? 'chrome136' : 'chrome131_android';
+const IS_IMPERSONATION_AVAILABLE = (typeof httpimp !== 'undefined');
+
 let config = {}
+let settings = {}
 
 //* Source
-source.enable = function (conf) {}
+source.enable = function (conf, setts) {
+    config = conf ?? {};
+    settings = setts ?? {};
+
+    if (IS_IMPERSONATION_AVAILABLE) {
+        const httpImpClient = httpimp.getDefaultClient(true);
+        if (httpImpClient.setDefaultImpersonateTarget) {
+            httpImpClient.setDefaultImpersonateTarget(IMPERSONATION_TARGET);
+        }
+    }
+}
 source.getHome = function () {
     return new HomePager({ page: 1, page_size: 20 })
 }
@@ -24,7 +40,7 @@ source.searchSuggestions = function (query) {
     /** @type {import("./types.d.ts").MultiSearchResponse} */
     const result = http.POST('https://search.kick.com/multi_search', JSON.stringify(gql), {
         'Content-Type': 'application/json',
-        'User-Agent': USER_AGENT,
+        'User-Agent': getUserAgent(),
         Accept: 'application/json',
         Host: 'search.kick.com',
         Origin: 'https://kick.com',
@@ -199,7 +215,7 @@ source.getContentRecommendations = function (url) {
                 'Sec-Fetch-Site': 'same-site',
                 'Sec-GPC': '1',
                 TE: 'trailers',
-                'User-Agent': USER_AGENT,
+                'User-Agent': getUserAgent(),
             }
         });
         
@@ -262,12 +278,13 @@ function callUrl(url) {
 }
 
 /**
- * Gets the requested url and returns the response body either as a string or as a parsed json object
+ * Gets the requested url and returns the response body either as a string or as a parsed json object.
+ * Cascades through http -> httpimp based on settings.
  * @param {Object} options - The options object
  * @param {string} options.url - The URL to call
  * @param {boolean} [options.useAuthenticated=false] - If true, will use the authenticated headers
  * @param {boolean} [options.parseResponse=true] - If true, will parse the response as json and check for errors
- * @param {number} [options.retries=0] - Number of retry attempts
+ * @param {number} [options.retries=3] - Number of retry attempts
  * @param {Object} [options.headers=null] - Custom headers to use for the request
  * @returns {string | Object} the response body as a string or the parsed json object
  * @throws {ScriptException}
@@ -280,59 +297,84 @@ function httpGET(options) {
         retries = 3,
         headers = null
     } = options;
-    
-    // log("Integrity: " + INTEGRITY)
-    let lastError;
-    let attempts = retries + 1; // +1 for the initial attempt
-    
-    while (attempts > 0) {
-        try {
 
-            const localHeaders = headers ?? {
-                'User-Agent': USER_AGENT,
-                Accept: 'application/json',
-                DNT: '1',
-                Host: 'kick.com',
-                Referer: 'https://kick.com/',
+    const baseHeaders = headers ?? {
+        Accept: 'application/json',
+        DNT: '1',
+        Referer: 'https://kick.com/',
+    }
+    // Only set User-Agent for standard http; httpimp sets its own to match TLS fingerprint
+    const httpHeaders = { 'User-Agent': getUserAgent(), ...baseHeaders }
+
+    function parseBody(resp) {
+        if (parseResponse) {
+            const json = JSON.parse(resp.body)
+            if (json.errors) {
+                throw new ScriptException(json.errors[0].message)
             }
+            return json
+        }
+        return resp.body
+    }
 
-            const httpClient = (typeof httpimp !== 'undefined') ? httpimp : http;
-            const resp = httpClient.GET(
-                url,
-                localHeaders,
-                useAuthenticated
-            )
-            if (!resp.isOk) {
-
-                throwIfCaptcha(resp);
-
-                throw new ScriptException("Request [" + url + "] failed with code [" + resp.code + "]")
-            }
-            
-            if (parseResponse) {
-                const json = JSON.parse(resp.body)
-                if (json.errors) {
-                    throw new ScriptException(json.errors[0].message)
+    function tryClient(client, label, attempts, reqHeaders) {
+        let lastError;
+        let captchaError = null;
+        while (attempts > 0) {
+            try {
+                const resp = client.GET(url, reqHeaders, useAuthenticated)
+                if (!resp.isOk) {
+                    throwIfCaptcha(resp);
+                    throw new ScriptException("Request [" + url + "] failed with code [" + resp.code + "]")
                 }
-                return json
-            }
-            
-            return resp.body
-        } catch (error) {
-            lastError = error;
-            attempts--;
-            
-            if (attempts === 0) {
-                // All retry attempts failed
-                log(`Request failed after ${retries + 1} attempts`);
-                if(IS_TESTING) {
-                    log(lastError);
+                verbose("[" + label + "] OK: " + url);
+                return parseBody(resp);
+            } catch (error) {
+                if (error instanceof CaptchaRequiredException) {
+                    verbose("[" + label + "] Captcha: " + url);
+                    captchaError = error;
+                } else {
+                    lastError = error;
                 }
-                throw lastError;
+                attempts--;
+                if (attempts > 0) {
+                    verbose("[" + label + "] Retry (" + attempts + " left): " + url);
+                }
             }
         }
+        verbose("[" + label + "] Failed: " + url);
+        if (captchaError) throw captchaError;
+        throw lastError;
     }
+
+    const useHttp = settings.useHttp !== false;
+    const useRetries = settings.useRequestRetries !== false;
+    const useImp = settings.useHttpImpersonation !== false && IS_IMPERSONATION_AVAILABLE;
+
+    let captchaError = null;
+    let lastError = null;
+    // 1. Try http with retries
+    if (useHttp) {
+        try {
+            return tryClient(http, 'http', useRetries ? retries + 1 : 1, httpHeaders);
+        } catch (e) {
+            if (e instanceof CaptchaRequiredException) captchaError = e;
+            else lastError = e;
+        }
+    }
+    // 2. Try httpimp if available
+    if (useImp) {
+        try {
+            return tryClient(httpimp, 'httpimp', 1, baseHeaders);
+        } catch (e) {
+            if (e instanceof CaptchaRequiredException) captchaError = e;
+            else lastError = e;
+        }
+    }
+    if (captchaError) throw captchaError;
+    throw lastError || new ScriptException("All request methods failed for: " + url);
 }
+
 /**
  * Returns a saved video
  * @param {string} url
@@ -374,15 +416,16 @@ class HomePager extends VideoPager {
      */
     constructor(context) {
         /** @type {import("./types.d.ts").FeaturedStreamResponse} */
-        const json = httpGET({ 
-            url: `https://kick.com/stream/livestreams/en?page=${context.page}&limit=${context.page_size}&sort=featured`
+        const json = httpGET({
+            url: `https://web.kick.com/api/v1/livestreams?page=${context.page}&limit=${context.page_size}&sort=featured_home&language=${LANG}`
         })
 
-        const results = json.data.map((s) => streamToPlatformVideo(s))
+        const results = (json?.data?.livestreams ?? json?.data ?? []).map((s) => streamToPlatformVideo(s))
+        const hasMore = !!(json?.data?.pagination?.next_cursor ?? json?.next_page_url)
 
-        super(results, json.next_page_url !== null, context)
+        super(results, hasMore, context)
     }
-    
+
     nextPage() {
         this.context.page++
         return new HomePager(this.context)
@@ -433,11 +476,6 @@ function parseMessage(msg) {
 class LiveEventPagerHelper extends LiveEventPager {
     /**
      * @param {string} channel_login
-     * @param {number} channel_id
-     * @param {number} chatroom_id
-     * @param {LiveEventEmojis[]} emojis
-     * @param {LiveEventComment[]} events
-     * @param {number} lastFetch
      */
     constructor(channel_login) {
         super([], true)
@@ -535,7 +573,21 @@ function liveVideoToPlatformVideo(j) {
         isLive: true,
         description: j?.user?.bio ?? '',
         video: new VideoSourceDescriptor([]),
-        live: new HLSSource({ name: 'live', duration: 0, url: j.playback_url }),
+        live: new HLSSource({
+            name: 'live',
+            duration: 0,
+            url: j.playback_url,
+            ...(settings.useStreamImpersonation !== false ? {
+                requestModifier: {
+                    options: {
+                        applyAuthClient: "",
+                        applyCookieClient: "",
+                        applyOtherHeaders: false,
+                        impersonateTarget: IMPERSONATION_TARGET
+                    }
+                }
+            } : {})
+        }),
     })
 }
 /**
@@ -578,8 +630,8 @@ function streamToPlatformVideo(s) {
             BASE_URL + channelSlug,
             channelProfilePic
         ),
-        uploadDate: parseInt(new Date(s.created_at + ' UTC').getTime() / 1000),
-        duration: s.duration,
+        uploadDate: parseInt(new Date(s.start_time ?? s.created_at ?? new Date().toISOString()).getTime() / 1000),
+        duration: s.duration ?? 0,
         viewCount: s.viewer_count,
         url: BASE_URL + channelSlug,
         isLive: true,
@@ -638,21 +690,38 @@ function savedVideoToPlatformVideo(j) {
         url: `${BASE_URL}${j.livestream.channel.slug}/videos/${j.uuid}`,
         isLive: false,
         description: j.livestream.channel.user.bio,
-        video: new VideoSourceDescriptor([new HLSSource({ name: 'hls', duration: duration, url: j.source })]),
+        video: new VideoSourceDescriptor([new HLSSource({
+            name: 'hls',
+            duration: duration,
+            url: j.source,
+            ...(settings.useStreamImpersonation !== false ? {
+                requestModifier: {
+                    options: {
+                        applyAuthClient: "",
+                        applyCookieClient: "",
+                        applyOtherHeaders: false,
+                        impersonateTarget: IMPERSONATION_TARGET
+                    }
+                }
+            } : {})
+        })]),
     })
 }
 
 function throwIfCaptcha(resp) {
-    if (resp?.body && resp?.code == 403) {
-
-        const body = resp.body.toLowerCase();
-
-		// Check for Cloudflare captcha
-        if (body.includes('/cdn-cgi/challenge-platform')) {
+    if (resp?.body && !resp?.isOk) {
+        if (/Just a moment\.\.\./i.test(resp.body) || resp.body.includes('/cdn-cgi/challenge-platform')) {
             throw new CaptchaRequiredException(resp.url, resp.body);
         }
     }
     return true;
+}
+
+function verbose(msg) {
+    if (settings.verboseNotifications) {
+        bridge.toast(msg);
+    }
+    log(msg);
 }
 
 log('LOADED')
