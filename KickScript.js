@@ -645,7 +645,6 @@ function streamToPlatformVideo(s) {
  * @returns { PlatformVideo }
  */
 function previousLivestreamToPlatformVideo(s, u, slug) {
-    const username = u.username ?? slug;
     return new PlatformVideo({
         id: new PlatformID(PLATFORM, s.id.toString(), config.id),
         name: s.session_title,
@@ -663,7 +662,7 @@ function previousLivestreamToPlatformVideo(s, u, slug) {
         uploadDate: parseInt(new Date(s.created_at).getTime() / 1000),
         duration: s.duration / 1000,
         viewCount: s.views,
-        url: `https://kick.com/${username}/videos/${s.video.uuid}`,
+        url: `${BASE_URL}${slug}/videos/${s.video.uuid}`,
         isLive: false,
     })
 }
