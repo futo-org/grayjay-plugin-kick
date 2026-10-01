@@ -7,7 +7,7 @@
   "sourceUrl": "https://plugins.grayjay.app/Kick/KickConfig.json",
   "repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/kick",
   "scriptUrl": "./KickScript.js",
-  "version": 23,
+  "version": 24,
   "iconUrl": "./kick.png",
   "id": "4a78c2ff-c20f-43ac-8f75-34515df1d320",
   "scriptSignature": "",
@@ -104,6 +104,10 @@
     }
   ],
   "changelog": {
+    "24": [
+      "Fix: some VODs not playing when opened from a channel page (channels with capitals or spaces in their name);",
+      "Fix: channel search with special characters;"
+    ],
     "23": [
       "Fix: Captcha issues;"
     ],
