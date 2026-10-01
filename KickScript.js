@@ -438,7 +438,7 @@ class SearchPagerChannels extends ChannelPager {
      */
     constructor(query) {
         /** @type {import("./types.d.ts").SearchResponse} */
-        const j = callUrl(`https://kick.com/api/search?searched_word=${query}`)
+        const j = callUrl(`https://kick.com/api/search?searched_word=${encodeURIComponent(query)}`)
 
         const results = j.channels.map((u) => searchChannelToPlatformChannel(u))
 
