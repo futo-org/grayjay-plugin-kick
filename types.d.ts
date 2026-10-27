@@ -361,7 +361,45 @@ export type ChannelResponse = {
 
 export type VideoResponse = Vod & {
     source: string
-    livestream: Stream
+    livestream: Stream & {
+        vod_id: string
+    }
+}
+
+export type WebVideo = {
+    id: string
+    title: string
+    category: {
+        id: number
+        name: string
+        slug: string
+    }
+    channel: {
+        id: number
+        slug: string
+        username: string
+    }
+    duration: number
+    start_time: string
+    end_time: string
+    original_expires_at: string
+    is_live: boolean
+    is_mature: boolean
+    language: string
+    recording_url: string
+    status: string
+    thumbnail: {
+        frame_ms: number
+        src: string
+        srcSet: string
+    }
+    tier: string
+    viewer_count: number
+}
+
+export type WebVideoResponse = {
+    data: WebVideo
+    message: string
 }
 
 export type ChatroomResponse = {
