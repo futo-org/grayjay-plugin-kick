@@ -402,6 +402,11 @@ export type WebVideoResponse = {
     message: string
 }
 
+export type WebVideoListResponse = {
+    data: WebVideo[]
+    message: string
+}
+
 export type ChatroomResponse = {
     id: number
     slow_mode: {

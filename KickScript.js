@@ -545,8 +545,13 @@ class ChannelVideoPager extends VideoPager {
         const login = extractUsername(context.url);
         /** @type {import("./types.d.ts").ChannelResponse} */
         const j = callUrl(`https://kick.com/api/v1/channels/${login}`)
+        /** @type {import("./types.d.ts").WebVideoListResponse} */
+        const videos = callUrl(`https://web.kick.com/api/v1/channels/${j.id}/videos`)
 
-        let results = j.previous_livestreams.map((v) => previousLivestreamToPlatformVideo(v, j.user, j.slug))
+        // the list includes the running stream, which is added below with its live source
+        let results = videos.data
+            .filter((v) => !v.is_live)
+            .map((v) => webVideoToPlatformVideo(v, j))
 
         // no need for first time checks since kick does not paginate vods
         const current_live = getLiveVideo(context.url, false)
@@ -648,31 +653,26 @@ function streamToPlatformVideo(s) {
     })
 }
 /**
- * Convert a previous livestream to a PlatformVideo
- * @param { import("./types.d.ts").PreviousLivestream } s
- * @param { import("./types.d.ts").User } u
- * @param { string } slug
+ * Convert a channel VOD from the web API to a PlatformVideo
+ * @param { import("./types.d.ts").WebVideo } v
+ * @param { import("./types.d.ts").ChannelResponse } channel
  * @returns { PlatformVideo }
  */
-function previousLivestreamToPlatformVideo(s, u, slug) {
+function webVideoToPlatformVideo(v, channel) {
     return new PlatformVideo({
-        id: new PlatformID(PLATFORM, s.id.toString(), config.id),
-        name: s.session_title,
-        thumbnails: new Thumbnails([new Thumbnail(s.thumbnail.src, 0)]),
+        id: new PlatformID(PLATFORM, v.id, config.id),
+        name: v.title,
+        thumbnails: new Thumbnails([new Thumbnail(v.thumbnail.src, 0)]),
         author: new PlatformAuthorLink(
-            new PlatformID(
-                PLATFORM, 
-                u.id.toString(), 
-                config.id, 
-                PLATFORM_CLAIMTYPE
-            ), u.username, 
-            BASE_URL + slug, 
-            u.profile_pic
+            new PlatformID(PLATFORM, channel.user_id.toString(), config.id, PLATFORM_CLAIMTYPE),
+            channel.user.username,
+            BASE_URL + channel.slug,
+            channel.user.profile_pic
         ),
-        uploadDate: parseInt(new Date(s.created_at).getTime() / 1000),
-        duration: s.duration / 1000,
-        viewCount: s.views,
-        url: `${BASE_URL}${slug}/videos/${s.video.uuid}`,
+        uploadDate: parseInt(new Date(v.start_time).getTime() / 1000),
+        duration: v.duration,
+        viewCount: v.viewer_count,
+        url: `${BASE_URL}${channel.slug}/videos/${v.id}`,
         isLive: false,
     })
 }
