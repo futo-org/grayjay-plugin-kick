@@ -171,8 +171,9 @@ source.getContentDetails = function (url) {
         videoDetails = getLiveVideo(url)
     }
 
+    // Legacy VOD links resolve to a new-id URL, which is what the recommendations list uses
     videoDetails.getContentRecommendations = function() {
-		return source.getContentRecommendations(url);
+		return source.getContentRecommendations(videoDetails.url);
 	};
 
     return videoDetails;
@@ -381,7 +382,17 @@ function httpGET(options) {
  * @returns {PlatformVideoDetails}
  */
 function getSavedVideo(url) {
-    const id = url.split('/').pop()
+    const id = url.match(/\/videos\/([a-zA-Z0-9-_]+)/)[1]
+
+    // kick.com links carry the new UUIDv7 VOD id; the v1 video API only accepts the legacy uuid
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-7/i.test(id)) {
+        /** @type {import("./types.d.ts").ChannelResponse} */
+        const channel = callUrl(`https://kick.com/api/v1/channels/${extractUsername(url)}`)
+        /** @type {import("./types.d.ts").WebVideoResponse} */
+        const res = callUrl(`https://web.kick.com/api/v1/channels/${channel.id}/videos/${id}`)
+
+        return webVideoToPlatformVideoDetails(res.data, channel)
+    }
 
     /** @type {import("./types.d.ts").VideoResponse}*/
     const j = callUrl(`https://kick.com/api/v1/video/${id}`)
@@ -535,8 +546,13 @@ class ChannelVideoPager extends VideoPager {
         const login = extractUsername(context.url);
         /** @type {import("./types.d.ts").ChannelResponse} */
         const j = callUrl(`https://kick.com/api/v1/channels/${login}`)
+        /** @type {import("./types.d.ts").WebVideoListResponse} */
+        const videos = callUrl(`https://web.kick.com/api/v1/channels/${j.id}/videos`)
 
-        let results = j.previous_livestreams.map((v) => previousLivestreamToPlatformVideo(v, j.user, j.slug))
+        // the list includes the running stream, which is added below with its live source
+        let results = videos.data
+            .filter((v) => !v.is_live)
+            .map((v) => webVideoToPlatformVideo(v, j))
 
         // no need for first time checks since kick does not paginate vods
         const current_live = getLiveVideo(context.url, false)
@@ -638,32 +654,53 @@ function streamToPlatformVideo(s) {
     })
 }
 /**
- * Convert a previous livestream to a PlatformVideo
- * @param { import("./types.d.ts").PreviousLivestream } s
- * @param { import("./types.d.ts").User } u
- * @param { string } slug
+ * Convert a channel VOD from the web API to a PlatformVideo
+ * @param { import("./types.d.ts").WebVideo } v
+ * @param { import("./types.d.ts").ChannelResponse } channel
  * @returns { PlatformVideo }
  */
-function previousLivestreamToPlatformVideo(s, u, slug) {
+function webVideoToPlatformVideo(v, channel) {
     return new PlatformVideo({
-        id: new PlatformID(PLATFORM, s.id.toString(), config.id),
-        name: s.session_title,
-        thumbnails: new Thumbnails([new Thumbnail(s.thumbnail.src, 0)]),
+        id: new PlatformID(PLATFORM, v.id, config.id),
+        name: v.title,
+        thumbnails: new Thumbnails([new Thumbnail(v.thumbnail.src, 0)]),
         author: new PlatformAuthorLink(
-            new PlatformID(
-                PLATFORM, 
-                u.id.toString(), 
-                config.id, 
-                PLATFORM_CLAIMTYPE
-            ), u.username, 
-            BASE_URL + slug, 
-            u.profile_pic
+            new PlatformID(PLATFORM, channel.user_id.toString(), config.id, PLATFORM_CLAIMTYPE),
+            channel.user.username,
+            BASE_URL + channel.slug,
+            channel.user.profile_pic
         ),
-        uploadDate: parseInt(new Date(s.created_at).getTime() / 1000),
-        duration: s.duration / 1000,
-        viewCount: s.views,
-        url: `${BASE_URL}${slug}/videos/${s.video.uuid}`,
+        uploadDate: parseInt(new Date(v.start_time).getTime() / 1000),
+        duration: v.duration,
+        viewCount: v.viewer_count,
+        url: `${BASE_URL}${channel.slug}/videos/${v.id}`,
         isLive: false,
+    })
+}
+/**
+ * Convert a VOD from the web API to a PlatformVideoDetails
+ * @param { import("./types.d.ts").WebVideo } v
+ * @param { import("./types.d.ts").ChannelResponse } channel
+ * @returns { PlatformVideoDetails }
+ */
+function webVideoToPlatformVideoDetails(v, channel) {
+    return new PlatformVideoDetails({
+        id: new PlatformID(PLATFORM, v.id, config.id),
+        name: v.title,
+        thumbnails: new Thumbnails([new Thumbnail(v.thumbnail.src, 0)]),
+        author: new PlatformAuthorLink(
+            new PlatformID(PLATFORM, channel.user_id.toString(), config.id, PLATFORM_CLAIMTYPE),
+            channel.user.username,
+            BASE_URL + channel.slug,
+            channel.user.profile_pic
+        ),
+        uploadDate: parseInt(new Date(v.start_time).getTime() / 1000),
+        duration: v.duration,
+        viewCount: v.viewer_count,
+        url: `${BASE_URL}${channel.slug}/videos/${v.id}`,
+        isLive: false,
+        description: channel.user.bio,
+        video: new VideoSourceDescriptor([vodHlsSource(v.recording_url, v.duration)]),
     })
 }
 /**
@@ -674,7 +711,7 @@ function previousLivestreamToPlatformVideo(s, u, slug) {
 function savedVideoToPlatformVideo(j) {
     const duration = j.livestream?.duration ? j.livestream.duration / 1000 : 0;
     return new PlatformVideoDetails({
-        id: new PlatformID(PLATFORM, j.id.toString(), config.id),
+        id: new PlatformID(PLATFORM, j.livestream.vod_id, config.id),
         name: j.livestream.session_title,
         thumbnails: new Thumbnails([new Thumbnail(j.livestream.thumbnail)]),
         author: new PlatformAuthorLink(
@@ -686,24 +723,32 @@ function savedVideoToPlatformVideo(j) {
         uploadDate: parseInt(new Date(j.created_at).getTime() / 1000),
         duration: duration,
         viewCount: j.views,
-        url: `${BASE_URL}${j.livestream.channel.slug}/videos/${j.uuid}`,
+        url: `${BASE_URL}${j.livestream.channel.slug}/videos/${j.livestream.vod_id}`,
         isLive: false,
         description: j.livestream.channel.user.bio,
-        video: new VideoSourceDescriptor([new HLSSource({
-            name: 'hls',
-            duration: duration,
-            url: j.source,
-            ...(settings.useStreamImpersonation !== false ? {
-                requestModifier: {
-                    options: {
-                        applyAuthClient: "",
-                        applyCookieClient: "",
-                        applyOtherHeaders: false,
-                        impersonateTarget: IMPERSONATION_TARGET
-                    }
+        video: new VideoSourceDescriptor([vodHlsSource(j.source, duration)]),
+    })
+}
+/**
+ * @param {string} url
+ * @param {number} duration in seconds
+ * @returns {HLSSource}
+ */
+function vodHlsSource(url, duration) {
+    return new HLSSource({
+        name: 'hls',
+        duration: duration,
+        url: url,
+        ...(settings.useStreamImpersonation !== false ? {
+            requestModifier: {
+                options: {
+                    applyAuthClient: "",
+                    applyCookieClient: "",
+                    applyOtherHeaders: false,
+                    impersonateTarget: IMPERSONATION_TARGET
                 }
-            } : {})
-        })]),
+            }
+        } : {})
     })
 }
 
