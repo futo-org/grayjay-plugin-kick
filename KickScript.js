@@ -171,8 +171,9 @@ source.getContentDetails = function (url) {
         videoDetails = getLiveVideo(url)
     }
 
+    // Legacy VOD links resolve to a new-id URL, which is what the recommendations list uses
     videoDetails.getContentRecommendations = function() {
-		return source.getContentRecommendations(url);
+		return source.getContentRecommendations(videoDetails.url);
 	};
 
     return videoDetails;
