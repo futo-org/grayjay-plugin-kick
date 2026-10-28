@@ -409,22 +409,22 @@ function httpGET(options) {
  * @returns {PlatformVideoDetails}
  */
 function getSavedVideo(url) {
-    const id = url.match(/\/videos\/([a-zA-Z0-9-_]+)/)[1]
+    let id = url.match(/\/videos\/([a-zA-Z0-9-_]+)/)[1]
 
-    // kick.com links carry the new UUIDv7 VOD id; the v1 video API only accepts the legacy uuid
-    if (/^[0-9a-f]{8}-[0-9a-f]{4}-7/i.test(id)) {
-        /** @type {import("./types.d.ts").ChannelResponse} */
-        const channel = callUrl(`https://kick.com/api/v1/channels/${extractUsername(url)}`)
-        /** @type {import("./types.d.ts").WebVideoResponse} */
-        const res = callUrl(`https://web.kick.com/api/v1/channels/${channel.id}/videos/${id}`)
-
-        return webVideoToPlatformVideoDetails(res.data, channel)
+    // kick.com links carry the new UUIDv7 VOD id. Legacy uuids go through the v1 video API only to get it,
+    // since its thumbnail is null or an S3 link that expires after 5 minutes
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-7/i.test(id)) {
+        /** @type {import("./types.d.ts").VideoResponse}*/
+        const j = callUrl(`https://kick.com/api/v1/video/${id}`)
+        id = j.livestream.vod_id
     }
 
-    /** @type {import("./types.d.ts").VideoResponse}*/
-    const j = callUrl(`https://kick.com/api/v1/video/${id}`)
+    /** @type {import("./types.d.ts").ChannelResponse} */
+    const channel = callUrl(`https://kick.com/api/v1/channels/${extractUsername(url)}`)
+    /** @type {import("./types.d.ts").WebVideoResponse} */
+    const res = callUrl(`https://web.kick.com/api/v1/channels/${channel.id}/videos/${id}`)
 
-    return savedVideoToPlatformVideo(j)
+    return webVideoToPlatformVideoDetails(res.data, channel)
 }
 /**
  * Returns a live video
@@ -759,32 +759,6 @@ function webVideoToPlatformVideoDetails(v, channel) {
         isLive: false,
         description: channel.user.bio,
         video: new VideoSourceDescriptor([vodHlsSource(v.recording_url, v.duration)]),
-    })
-}
-/**
- * Converts a saved video to a platform video
- * @param {import("./types.d.ts").VideoResponse} j
- * @returns {PlatformVideoDetails}
- */
-function savedVideoToPlatformVideo(j) {
-    const duration = j.livestream?.duration ? j.livestream.duration / 1000 : 0;
-    return new PlatformVideoDetails({
-        id: new PlatformID(PLATFORM, j.livestream.vod_id, config.id),
-        name: j.livestream.session_title,
-        thumbnails: new Thumbnails([new Thumbnail(j.livestream.thumbnail)]),
-        author: new PlatformAuthorLink(
-            new PlatformID(PLATFORM, j.livestream.channel.user_id.toString(), config.id, PLATFORM_CLAIMTYPE),
-            j.livestream.channel.user.username,
-            BASE_URL + j.livestream.channel.slug,
-            j.livestream.channel.user.profilepic
-        ),
-        uploadDate: parseInt(new Date(j.created_at).getTime() / 1000),
-        duration: duration,
-        viewCount: j.views,
-        url: `${BASE_URL}${j.livestream.channel.slug}/videos/${j.livestream.vod_id}`,
-        isLive: false,
-        description: j.livestream.channel.user.bio,
-        video: new VideoSourceDescriptor([vodHlsSource(j.source, duration)]),
     })
 }
 /**
