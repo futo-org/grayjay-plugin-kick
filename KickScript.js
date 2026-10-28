@@ -68,13 +68,6 @@ source.getSearchCapabilities = () => {
 source.search = function (query, type, order, filters) {
     return new SearchPager(query)
 }
-source.getSearchChannelContentsCapabilities = function () {
-    return { types: [Type.Feed.Mixed], sorts: [Type.Order.Chronological], filters: [] }
-}
-// not in Kick
-source.searchChannelContents = function (channelUrl, query, type, order, filters) {
-    return []
-}
 source.searchChannels = function (query) {
     return new SearchPagerChannels(query)
 }
