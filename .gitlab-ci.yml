@@ -1,9 +1,26 @@
 stages:
-- deploy
+  - deploy
 
-deploy:
+variables:
+  PLUGIN_NAME: Kick
+  ICON_FILE: kick.png
+  SCRIPT_FILE: KickScript.js
+  CONFIG_FILE: KickConfig.json
+
+deploy-master:
   stage: deploy
+  variables:
+    PRE_RELEASE: "false"
   script:
     - sh deploy.sh
   only:
     - master
+
+deploy-dev:
+  stage: deploy
+  variables:
+    PRE_RELEASE: "true"
+  script:
+    - sh deploy.sh
+  only:
+    - dev
