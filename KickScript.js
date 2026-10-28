@@ -32,7 +32,7 @@ source.enable = function (conf, setts) {
     }
 }
 source.getHome = function () {
-    return new HomePager({ page: 1, page_size: 20 })
+    return new HomePager({ cursor: null, page_size: 20 })
 }
 source.searchSuggestions = function (query) {
     const gql = { searches: [{ preset: 'channel_search', q: query }] }
@@ -454,18 +454,19 @@ class HomePager extends VideoPager {
      */
     constructor(context) {
         /** @type {import("./types.d.ts").FeaturedStreamResponse} */
+        // the endpoint ignores `page`; kick.com pages with `after` set to the previous next_cursor
+        const after = context.cursor ? `&after=${encodeURIComponent(context.cursor)}` : ''
         const json = httpGET({
-            url: `https://web.kick.com/api/v1/livestreams?page=${context.page}&limit=${context.page_size}&sort=featured_home&language=${LANG}`
+            url: `https://web.kick.com/api/v1/livestreams?limit=${context.page_size}&sort=featured_home&language=${LANG}${after}`
         })
 
         const results = (json?.data?.livestreams ?? json?.data ?? []).map((s) => streamToPlatformVideo(s))
-        const hasMore = !!(json?.data?.pagination?.next_cursor ?? json?.next_page_url)
+        const nextCursor = json?.data?.pagination?.next_cursor
 
-        super(results, hasMore, context)
+        super(results, !!nextCursor, { ...context, cursor: nextCursor })
     }
 
     nextPage() {
-        this.context.page++
         return new HomePager(this.context)
     }
 }

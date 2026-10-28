@@ -1,5 +1,5 @@
 export type HomeContext = {
-    page: number
+    cursor: string | null
     page_size: number
 }
 
