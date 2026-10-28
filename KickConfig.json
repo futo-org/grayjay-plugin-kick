@@ -33,8 +33,12 @@
     "cookiesToFind": [
       "session_token"
     ],
-    "loginButton": "nav button:last-child",
-    "completionUrl": "https://kick.com/broadcasting/auth"
+    "domainHeadersToFind": {
+      ".kick.com": [
+        "authorization"
+      ]
+    },
+    "loginButton": "nav button:last-child"
   },
   "authenticationDesktop": {
     "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
@@ -45,8 +49,12 @@
     "cookiesToFind": [
       "session_token"
     ],
+    "domainHeadersToFind": {
+      ".kick.com": [
+        "authorization"
+      ]
+    },
     "loginButton": "nav button:last-child",
-    "completionUrl": "https://kick.com/broadcasting/auth",
     "useMobileEmulation": false
   },
   "captcha": {
