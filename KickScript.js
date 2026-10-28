@@ -179,10 +179,16 @@ source.getContentDetails = function (url) {
     return videoDetails;
 }
 source.getUserSubscriptions = function () {
-    /** @type {import("./types.d.ts").FollowedChannelResponse} */
-    const j = httpGET({ url: 'https://kick.com/api/v2/channels/followed?cursor=0', useAuthenticated: true })
+    const urls = []
+    let cursor = 0
+    do {
+        /** @type {import("./types.d.ts").FollowedChannelResponse} */
+        const j = httpGET({ url: `https://kick.com/api/v2/channels/followed?cursor=${encodeURIComponent(cursor)}`, useAuthenticated: true })
+        urls.push(...j.channels.map((c) => BASE_URL + c.channel_slug))
+        cursor = j.nextCursor
+    } while (cursor)
 
-    return j.channels.map((c) => BASE_URL + c.channel_slug)
+    return urls
 }
 
 source.getContentRecommendations = function (url) {

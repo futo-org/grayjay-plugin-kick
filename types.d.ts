@@ -467,4 +467,5 @@ type FollowedChannel = {
 
 export type FollowedChannelResponse = {
     channels: FollowedChannel[]
+    nextCursor?: number | string
 }
