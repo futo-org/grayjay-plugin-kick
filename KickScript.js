@@ -63,7 +63,7 @@ source.getSearchCapabilities = () => {
     return { types: [Type.Feed.Mixed], sorts: [], filters: [] }
 }
 source.search = function (query, type, order, filters) {
-    return new VideoPager()
+    return new SearchPager(query)
 }
 source.getSearchChannelContentsCapabilities = function () {
     return { types: [Type.Feed.Mixed], sorts: [Type.Order.Chronological], filters: [] }
@@ -442,6 +442,21 @@ class HomePager extends VideoPager {
         return new HomePager(this.context)
     }
 }
+class SearchPager extends VideoPager {
+    /**
+     * Search livestreams
+     * @param {string} query
+     */
+    constructor(query) {
+        /** @type {import("./types.d.ts").SearchResponse} */
+        const j = callUrl(`https://search.kick.com/api/v1/search/enriched?query=${encodeURIComponent(query)}`)
+
+        // kick.com returns at most 10 livestreams and has no paging for them
+        const results = j.data.livestreams.map((s) => streamToPlatformVideo(s))
+
+        super(results, false, { query })
+    }
+}
 class SearchPagerChannels extends ChannelPager {
     /**
      * Search channels
@@ -633,7 +648,7 @@ function streamToPlatformVideo(s) {
     const channelId = s?.channel?.user?.id?.toString() ?? s?.channel?.id?.toString();
     const channelSlug =  s?.channel?.user?.slug ?? s?.channel?.slug;
     const channelUsername = s?.channel?.user?.username ?? s?.channel?.username;
-    const channelProfilePic = s?.channel?.user?.profilepic ?? s?.channel?.profile_pic;
+    const channelProfilePic = s?.channel?.user?.profilepic ?? s?.channel?.profile_pic ?? s?.channel?.profile_picture;
     const name = s?.session_title ?? s.title ?? '';
 
     return new PlatformVideo({

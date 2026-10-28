@@ -257,6 +257,32 @@ type SearchChannel = {
     username: string
 }
 
+type SearchLivestream = {
+    category: {
+        id: number
+        name: string
+        slug: string
+    }
+    channel: {
+        id: number
+        profile_picture: string
+        slug: string
+        username: string
+    }
+    id: string
+    is_mature: boolean
+    language: string
+    show_view_count: boolean
+    start_time: string
+    tags: string[]
+    thumbnail: {
+        src: string
+        srcset: string
+    }
+    title: string
+    viewer_count: number
+}
+
 type SearchCategory = {
     id: number
     is_mature: boolean
@@ -274,6 +300,7 @@ export type SearchResponse = {
     data: {
         categories: SearchCategory[]
         channels: SearchChannel[]
+        livestreams: SearchLivestream[]
     }
     message: string
 }
