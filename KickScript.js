@@ -179,11 +179,32 @@ source.getContentDetails = function (url) {
     return videoDetails;
 }
 source.getUserSubscriptions = function () {
+    // followed-page returns 20 per page against 5 for followed; followed is kept in case kick.com changes one of them
+    let lastError
+    for (const endpoint of ['followed-page', 'followed']) {
+        try {
+            const urls = getFollowedChannelUrls(endpoint)
+            if (lastError) {
+                log(`Subscription import: fell back to ${endpoint}, got ${urls.length} channels`)
+            }
+            return urls
+        } catch (error) {
+            if (error instanceof CaptchaRequiredException) {
+                throw error
+            }
+            log(`Subscription import: ${endpoint} failed: ${error.message}`)
+            lastError = error
+        }
+    }
+    throw lastError
+}
+
+function getFollowedChannelUrls(endpoint) {
     const urls = []
     let cursor = 0
     do {
         /** @type {import("./types.d.ts").FollowedChannelResponse} */
-        const j = httpGET({ url: `https://kick.com/api/v2/channels/followed?cursor=${encodeURIComponent(cursor)}`, useAuthenticated: true })
+        const j = httpGET({ url: `https://kick.com/api/v2/channels/${endpoint}?cursor=${encodeURIComponent(cursor)}`, useAuthenticated: true })
         urls.push(...j.channels.map((c) => BASE_URL + c.channel_slug))
         cursor = j.nextCursor
     } while (cursor)
