@@ -279,20 +279,12 @@ source.getLiveEvents = function (url) {
  * @returns {string} The username
  */
 function extractUsername(url) {
-    // Match kick.com/username/videos/uuid
-    let match = url.match(/kick\.com\/([a-zA-Z0-9-_]+)\/videos\/[a-zA-Z0-9-_]+/);
-    if (match) {
-        return match[1];
+    // the first path segment, so channel tabs such as /about and /videos resolve to their channel
+    const match = url.match(/kick\.com\/([a-zA-Z0-9-_]+)/);
+    if (!match) {
+        throw new ScriptException('Not a Kick URL: ' + url);
     }
-    
-    // Match kick.com/username or kick.com/username/
-    match = url.match(/kick\.com\/([a-zA-Z0-9-_]+)\/?$/);
-    if (match) {
-        return match[1];
-    }
-    
-    // If no match, fallback to the old method as safety
-    return url.split('/').pop();
+    return match[1];
 }
 
 /**
