@@ -38,7 +38,7 @@
         "authorization"
       ]
     },
-    "loginButton": "nav button:last-child"
+    "loginWarning": "Kick may show a cookie banner when the page opens. Tap \"I Accept\" or \"Reject All\" first. Then tap the person icon in the top right corner (\"Log In\" on larger screens) and log in. This window closes by itself once you are logged in."
   },
   "authenticationDesktop": {
     "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
