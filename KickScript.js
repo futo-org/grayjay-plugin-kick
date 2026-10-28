@@ -627,7 +627,8 @@ class ChannelVideoPager extends VideoPager {
  */
 function liveVideoToPlatformVideo(j) {
     
-    const thumbnails = j?.livestream?.thumbnail?.url ? [new Thumbnail(j.livestream.thumbnail.url, 0)] : [];
+    // livestream.thumbnail.url is null or answers 403; kick.com's player loads this one instead
+    const thumbnails = [new Thumbnail(`https://web.kick.com/api/v1/channels/${j.id}/thumbnail.jpeg`, 0)];
     const streamTitle = j?.livestream?.session_title ?? j.user.username;
 
     return new PlatformVideoDetails({
@@ -640,7 +641,8 @@ function liveVideoToPlatformVideo(j) {
             BASE_URL + j.slug,
             j.user.profile_pic
         ),
-        uploadDate: (j.created_at) ? parseInt(new Date(j.created_at).getTime() / 1000) : parseInt(new Date().getTime() / 1000),
+        // start_time is UTC without a zone marker ("2026-10-27 19:58:02")
+        uploadDate: parseInt(new Date(j.livestream.start_time.replace(' ', 'T') + 'Z').getTime() / 1000),
         duration: j?.livestream?.duration ?? 0 ,
         viewCount: j?.livestream?.viewer_count ?? 0,
         url: BASE_URL + j.slug,
