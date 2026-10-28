@@ -13,6 +13,9 @@ const getUserAgent = () => bridge.authUserAgent ?? bridge.captchaUserAgent ?? US
 
 const PLATFORM_CLAIMTYPE = 16;
 
+// search.kick.com answers 400 to longer queries
+const SEARCH_QUERY_MAX_LENGTH = 100;
+
 const IMPERSONATION_TARGET = IS_DESKTOP ? 'chrome136' : 'chrome131_android';
 const IS_IMPERSONATION_AVAILABLE = (typeof httpimp !== 'undefined');
 
@@ -396,6 +399,20 @@ function httpGET(options) {
 }
 
 /**
+ * @param {string} query
+ * @returns {import("./types.d.ts").SearchResponse["data"]}
+ */
+function searchEnriched(query) {
+    // search.kick.com answers 400 to an empty query
+    const trimmed = query.trim().slice(0, SEARCH_QUERY_MAX_LENGTH)
+    if (!trimmed) {
+        return { livestreams: [], channels: [] }
+    }
+    /** @type {import("./types.d.ts").SearchResponse} */
+    const j = callUrl(`https://search.kick.com/api/v1/search/enriched?query=${encodeURIComponent(trimmed)}`)
+    return j.data
+}
+/**
  * Returns a saved video
  * @param {string} url
  * @returns {PlatformVideoDetails}
@@ -468,11 +485,8 @@ class SearchPager extends VideoPager {
      * @param {string} query
      */
     constructor(query) {
-        /** @type {import("./types.d.ts").SearchResponse} */
-        const j = callUrl(`https://search.kick.com/api/v1/search/enriched?query=${encodeURIComponent(query)}`)
-
         // kick.com returns at most 10 livestreams and has no paging for them
-        const results = j.data.livestreams.map((s) => streamToPlatformVideo(s))
+        const results = searchEnriched(query).livestreams.map((s) => streamToPlatformVideo(s))
 
         super(results, false, { query })
     }
@@ -483,10 +497,7 @@ class SearchPagerChannels extends ChannelPager {
      * @param {string} query
      */
     constructor(query) {
-        /** @type {import("./types.d.ts").SearchResponse} */
-        const j = callUrl(`https://search.kick.com/api/v1/search/enriched?query=${encodeURIComponent(query)}`)
-
-        const results = j.data.channels.map((u) => searchChannelToPlatformChannel(u))
+        const results = searchEnriched(query).channels.map((u) => searchChannelToPlatformChannel(u))
 
         super(results, false, { query })
     }
