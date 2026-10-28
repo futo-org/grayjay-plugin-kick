@@ -449,9 +449,9 @@ class SearchPagerChannels extends ChannelPager {
      */
     constructor(query) {
         /** @type {import("./types.d.ts").SearchResponse} */
-        const j = callUrl(`https://kick.com/api/search?searched_word=${encodeURIComponent(query)}`)
+        const j = callUrl(`https://search.kick.com/api/v1/search/enriched?query=${encodeURIComponent(query)}`)
 
-        const results = j.channels.map((u) => searchChannelToPlatformChannel(u))
+        const results = j.data.channels.map((u) => searchChannelToPlatformChannel(u))
 
         super(results, false, { query })
     }
@@ -614,11 +614,11 @@ function liveVideoToPlatformVideo(j) {
 function searchChannelToPlatformChannel(c) {
     return new PlatformChannel({
         id: new PlatformID(PLATFORM, c.id.toString(), config.id, PLATFORM_CLAIMTYPE),
-        name: c.user.username,
-        thumbnail: c.user.profilePic,
+        name: c.username,
+        thumbnail: c.profile_picture,
         banner: '',
-        subscribers: c.followersCount,
-        description: c.user.bio,
+        subscribers: c.follower_count,
+        description: '',
         url: BASE_URL + c.slug,
         links: [],
     })

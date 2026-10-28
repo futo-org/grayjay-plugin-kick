@@ -246,71 +246,36 @@ type Media = {
     custom_properties: any
 }
 
-type InsertedCategory = {
+type SearchChannel = {
+    follower_count: number
+    following: boolean
     id: number
-    icon: string
-    name: string
+    is_live: boolean
+    is_verified: boolean
+    profile_picture: string
     slug: string
-}
-
-type SmallCategory = {
-    category: InsertedCategory
-    tags: string[]
+    username: string
 }
 
 type SearchCategory = {
     id: number
-    category_id: number
+    is_mature: boolean
     name: string
     slug: string
     tags: string[]
-    description?: string
-    deleted_at?: string
-    viewers: number
-    banner: {
+    thumbnail: {
         src: string
         srcset: string
     }
-    category: InsertedCategory
-}
-
-type SmallUser = {
-    id: number
-    username: string
-    agreed_to_terms: boolean
-    email_verified_at?: string
-    bio: string
-    profilePic: string
-}
-
-type SearchChannel = {
-    id: number
-    user_id: number
-    slug: string
-    is_banned: boolean
-    playback_url: string
-    name_updated_at?: string
-    vod_enabled: boolean
-    subscription_enabled: boolean
-    userId: number
-    followersCount: number
-    following: boolean
-    subscription: boolean
-    isLive: boolean
-    recentCategories: SmallCategory[]
-    canHost: boolean
-    user: SmallUser
-    verified: {
-        id: number
-        channel_id: number
-        created_at: string
-        updated_at: string
-    }
+    viewer_count: number
 }
 
 export type SearchResponse = {
-    channels: SearchChannel[]
-    categories: SearchCategory[]
+    data: {
+        categories: SearchCategory[]
+        channels: SearchChannel[]
+    }
+    message: string
 }
 
 export type ChannelResponse = {
