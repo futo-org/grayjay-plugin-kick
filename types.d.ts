@@ -444,6 +444,20 @@ export type ChatroomMessage = {
     }
 }
 
+export type RealtimeConnectionResponse = {
+    data: {
+        connections: {
+            provider: string
+            credentials: {
+                app_key: string
+                cluster: string
+            }
+        }[]
+        mode: string
+    }
+    message: string
+}
+
 export type PrepopulateChatResponse = {
     status: {
         error: boolean

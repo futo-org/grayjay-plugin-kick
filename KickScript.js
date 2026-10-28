@@ -550,8 +550,23 @@ class LiveEventPagerHelper extends LiveEventPager {
         this.events = parsed.map((m) => m.message)
         this.lastFetch = new Date().getTime()
 
+        // kick.com hands out the Pusher app key per connection; the old hardcoded key was rotated out
+        const clientId = 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, () => Math.floor(Math.random() * 16).toString(16))
+        const connection = http.POST(
+            `https://web.kick.com/api/v1/realtime/channels/${resp.id}/chat/connection`,
+            JSON.stringify({ client: { id: clientId, type: 'web' }, capabilities: { accepted_providers: [{ provider: 'pusher' }] } }),
+            { 'Content-Type': 'application/json', Accept: 'application/json', 'User-Agent': getUserAgent() },
+            false
+        )
+        if (!connection.isOk) {
+            throw new ScriptException('Chat connection failed with code [' + connection.code + ']')
+        }
+        /** @type {import("./types.d.ts").RealtimeConnectionResponse} */
+        const realtime = JSON.parse(connection.body)
+        const { app_key, cluster } = realtime.data.connections[0].credentials
+
         let socket = http.socket(
-            'wss://ws-us2.pusher.com/app/eb1d5f283081a78b932c?protocol=7&client=js&version=7.6.0&flash=false',
+            `wss://ws-${cluster}.pusher.com/app/${app_key}?protocol=7&client=js&version=7.6.0&flash=false`,
             {},
             false
         )
