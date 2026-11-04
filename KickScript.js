@@ -15,6 +15,7 @@ const PLATFORM_CLAIMTYPE = 16;
 
 // search.kick.com answers 400 to longer queries
 const SEARCH_QUERY_MAX_LENGTH = 100;
+const HTTP_UNAUTHORIZED = 401;
 
 const IMPERSONATION_TARGET = IS_DESKTOP ? 'chrome136' : 'chrome131_android';
 const IS_IMPERSONATION_AVAILABLE = (typeof httpimp !== 'undefined');
@@ -185,7 +186,7 @@ source.getUserSubscriptions = function () {
             }
             return urls
         } catch (error) {
-            if (error instanceof CaptchaRequiredException) {
+            if (error instanceof CaptchaRequiredException || error instanceof LoginRequiredException) {
                 throw error
             }
             log(`Subscription import: ${endpoint} failed: ${error.message}`)
@@ -341,11 +342,18 @@ function httpGET(options) {
                 const resp = client.GET(url, reqHeaders, useAuthenticated)
                 if (!resp.isOk) {
                     throwIfCaptcha(resp);
+                    if (useAuthenticated && resp.code === HTTP_UNAUTHORIZED) {
+                        throw new LoginRequiredException('Kick rejected your login, which may have expired. Tap Logout in the Kick source settings, then Login again.')
+                    }
                     throw new ScriptException("Request [" + url + "] failed with code [" + resp.code + "]")
                 }
                 verbose("[" + label + "] OK: " + url);
                 return parseBody(resp);
             } catch (error) {
+                // retrying or switching client cannot fix a rejected session
+                if (error instanceof LoginRequiredException) {
+                    throw error;
+                }
                 if (error instanceof CaptchaRequiredException) {
                     verbose("[" + label + "] Captcha: " + url);
                     captchaError = error;
@@ -374,6 +382,7 @@ function httpGET(options) {
         try {
             return tryClient(http, 'http', useRetries ? retries + 1 : 1, httpHeaders);
         } catch (e) {
+            if (e instanceof LoginRequiredException) throw e;
             if (e instanceof CaptchaRequiredException) captchaError = e;
             else lastError = e;
         }
