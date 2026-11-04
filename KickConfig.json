@@ -7,7 +7,7 @@
   "sourceUrl": "https://plugins.grayjay.app/Kick/KickConfig.json",
   "repositoryUrl": "https://gitlab.futo.org/videostreaming/plugins/kick",
   "scriptUrl": "./KickScript.js",
-  "version": 25,
+  "version": 26,
   "iconUrl": "./kick.png",
   "id": "4a78c2ff-c20f-43ac-8f75-34515df1d320",
   "scriptSignature": "",
@@ -112,6 +112,23 @@
     }
   ],
   "changelog": {
+    "26": [
+      "Fix: the recording of a running livestream missing from the channel's videos;",
+      "Fix: channel search with names of more than one word;",
+      "Fix: login not completing, which made subscription import fail;",
+      "Fix: cookie banner blocking the login page on Android;",
+      "Fix: subscription import only fetched the first page of followed channels;",
+      "Fix: subscription import with an expired login now says to log in again instead of showing a 401 error;",
+      "Fix: live chat not receiving new messages;",
+      "Fix: Home feed repeating the same streams when scrolling;",
+      "Fix: missing thumbnails for live streams and older VODs;",
+      "Fix: live streams showing the time they were opened instead of their start time;",
+      "Fix: links to a channel's About or Videos tab opening the wrong channel;",
+      "Fix: errors when searching with an empty or very long query;",
+      "Fix: removed the channel page search box, which always failed (Kick has no search within a channel);",
+      "Improvement: search for livestreams;",
+      "Improvement: faster subscription import, 20 channels per request instead of 5;"
+    ],
     "25": [
       "Fix: VOD links shared from Grayjay opening a not-found page on kick.com;",
       "Fix: VOD links copied from kick.com not opening;"
