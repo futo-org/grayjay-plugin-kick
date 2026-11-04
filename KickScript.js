@@ -612,10 +612,8 @@ class ChannelVideoPager extends VideoPager {
         /** @type {import("./types.d.ts").WebVideoListResponse} */
         const videos = callUrl(`https://web.kick.com/api/v1/channels/${j.id}/videos`)
 
-        // the list includes the running stream, which is added below with its live source
-        let results = videos.data
-            .filter((v) => !v.is_live)
-            .map((v) => webVideoToPlatformVideo(v, j))
+        // keeps the running stream's entry: it plays the recording so far, next to the live item added below
+        let results = videos.data.map((v) => webVideoToPlatformVideo(v, j))
 
         // no need for first time checks since kick does not paginate vods
         const current_live = getLiveVideo(context.url, false)
