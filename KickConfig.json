@@ -117,17 +117,17 @@
       "Fix: channel search with names of more than one word;",
       "Fix: login not completing, which made subscription import fail;",
       "Fix: cookie banner blocking the login page on Android;",
-      "Fix: subscription import only fetched the first page of followed channels;",
+      "Fix: subscription import only brought in the first 5 followed channels;",
       "Fix: subscription import with an expired login now says to log in again instead of showing a 401 error;",
       "Fix: live chat not receiving new messages;",
       "Fix: Home feed repeating the same streams when scrolling;",
-      "Fix: missing thumbnails for live streams and older VODs;",
+      "Fix: missing thumbnails for live streams;",
+      "Fix: thumbnails of VODs saved before version 25 disappearing after a few minutes;",
       "Fix: live streams showing the time they were opened instead of their start time;",
       "Fix: links to a channel's About or Videos tab opening the wrong channel;",
-      "Fix: errors when searching with an empty or very long query;",
+      "Fix: error when searching channels with only spaces;",
       "Fix: removed the channel page search box, which always failed (Kick has no search within a channel);",
-      "Improvement: search for livestreams;",
-      "Improvement: faster subscription import, 20 channels per request instead of 5;"
+      "Improvement: search for livestreams;"
     ],
     "25": [
       "Fix: VOD links shared from Grayjay opening a not-found page on kick.com;",
